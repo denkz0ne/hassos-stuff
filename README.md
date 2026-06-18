@@ -10,28 +10,28 @@ Home Assistant veci, helpery a blueprinty.
 
 ## Pool filtration blueprint
 
-Tento blueprint riesi dynamicku filtraciu bazena v dennych blokoch:
+Tento blueprint rieši dynamickú filtráciu bazéna v denných blokoch:
 
-- rano
+- ráno
 - obed
-- vecer
-- tvrdy stop najneskor vecer
+- večer
+- najneskoršie večerné vypnutie
 
-Podporuje rezimy:
+Podporuje režimy:
 
 - `Auto`
 - `Eco`
 - `Standard`
-- `Intenzivny`
+- `Intenzívny`
 
-V rezime `Auto` vie zohladnit:
+V režime `Auto` vie zohľadniť:
 
 - teplotu vody
 - UV
 - svetlo
-- kupanie dnes
-- manual boost
+- kúpanie počas dňa
+- manuálny boost
 
-Import a priklad pouzitia su v:
+Import a príklad použitia sú v:
 
 - `blueprints/automation/animus/README.md`
