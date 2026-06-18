@@ -1,25 +1,25 @@
 # Blueprinty pre HASS
 
-Aktualny blueprint pre bazen:
+Aktuálny blueprint pre bazén:
 
 - `bazen_filtracia_dynamicka.yaml`
 
-## Co robi
+## Čo robí
 
-- drzi filter zapnuty iba pocas aktivnych oken
-- podporuje `Auto`, `Eco`, `Standard`, `Intenzivny`
-- ma pekne sekcie vstupov v UI
-- helpery su volitelne
-- vecer nikdy nepusti filter po case `Najneskor stop`
+- drží filter zapnutý iba počas aktívnych časových okien
+- podporuje režimy `Auto`, `Eco`, `Standard`, `Intenzívny`
+- má prehľadné sekcie vstupov priamo v UI
+- helpery sú voliteľné
+- večer nikdy nenechá filter bežať po čase `Najneskoršie vypnutie`
 
 ## Import
 
-1. `Nastavenia -> Automatizacie a sceny -> Blueprints`
+1. `Nastavenia -> Automatizácie a scény -> Blueprints`
 2. `Import blueprint`
-3. vloz obsah suboru `bazen_filtracia_dynamicka.yaml`
-4. vytvor novu automatizaciu z blueprintu
+3. vlož obsah súboru `bazen_filtracia_dynamicka.yaml`
+4. vytvor novú automatizáciu z blueprintu
 
-## Priklad instancie
+## Príklad inštancie
 
 Pozri:
 
