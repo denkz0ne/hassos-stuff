@@ -1,0 +1,52 @@
+alias: Bazen - dynamicka filtracia
+description: Priklad konkretnej instancie nad tvojimi entitami.
+use_blueprint:
+  path: animus/bazen_filtracia_dynamicka.yaml
+  input:
+    filter_switch: switch.esp_80_meteomini_bazenovy_filter
+    water_temp_sensor: sensor.poolboard_teplota_vody
+    online_sensor: binary_sensor.esp_80_meteomini_poolboard_status
+
+    enable_helper: input_boolean.bazen_filtracia_auto
+    mode_helper: input_select.bazen_filtracia_rezim
+    swim_today_helper: input_boolean.bazen_kupanie_dnes
+    manual_boost_helper: input_boolean.bazen_filtracia_manual_boost
+    fixed_mode: Auto
+
+    morning_start: "08:00:00"
+    noon_start: "13:00:00"
+    evening_start: "18:30:00"
+    hard_stop: "21:00:00"
+    poll_minutes: 5
+
+    uv_sensor: sensor.esp_80_meteomini_uv_index
+    light_sensor: sensor.esp_80_meteomini_exteri_r_osvetlenie
+    auto_temp_threshold: 26
+    auto_uv_threshold: 6
+    auto_light_threshold: 6000
+
+    eco_morning_min: 120
+    eco_noon_min: 60
+    eco_evening_min: 30
+
+    standard_morning_min: 180
+    standard_noon_min: 120
+    standard_evening_min: 60
+
+    intensive_morning_min: 240
+    intensive_noon_min: 120
+    intensive_evening_min: 120
+
+    auto_hot_morning_bonus: 30
+    auto_hot_noon_bonus: 0
+    auto_hot_evening_bonus: 30
+
+    auto_swim_morning_bonus: 0
+    auto_swim_noon_bonus: 30
+    auto_swim_evening_bonus: 30
+
+    auto_boost_morning_bonus: 30
+    auto_boost_noon_bonus: 30
+    auto_boost_evening_bonus: 30
+
+    run_if_filter_unavailable: false
