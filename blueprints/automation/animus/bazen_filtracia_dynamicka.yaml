@@ -1,0 +1,637 @@
+blueprint:
+  name: Bazen - dynamicka filtracia s dennymi blokmi
+  description: |
+    Dynamicka filtracia pre bazen s rannym, obednym a vecernym blokom.
+
+    Funkcie:
+    - rezimy `Auto`, `Eco`, `Standard`, `Intenzivny`
+    - tri denne bloky filtracie
+    - tvrdy vecerny limit
+    - v `Auto` navysenie podla teploty vody, UV/svetla, kupania a boostu
+    - funguje aj bez helperov, ale s helpermi je ovladanie pohodlnejsie
+  domain: automation
+  author: Codex
+  homeassistant:
+    min_version: 2024.6.0
+  input:
+    core_section:
+      name: Zaklad
+      icon: mdi:pool
+      description: Hlavne entity, ktore blueprint potrebuje.
+      input:
+        filter_switch:
+          name: Filter - hlavny spinac
+          description: Spinac alebo rele, ktore realne zapina filter.
+          selector:
+            entity:
+              domain: switch
+
+        water_temp_sensor:
+          name: Teplota vody
+          description: Senzor teploty bazena.
+          selector:
+            entity:
+              domain: sensor
+
+        online_sensor:
+          name: Online senzor
+          description: Volitelne. Ak je zadany a nie je `on`, filter sa nepusti.
+          default: ""
+          selector:
+            entity:
+              domain: binary_sensor
+
+    helpers_section:
+      name: Volitelne helpery
+      icon: mdi:tune-variant
+      collapsed: true
+      description: |
+        Ak helpery nevyplnis, blueprint ide podla pevnych nastaveni.
+        Ak ich vyplnis, vies rezim a boosty menit pohodlne cez UI.
+      input:
+        enable_helper:
+          name: Helper - automatika povolena
+          default: ""
+          selector:
+            entity:
+              domain: input_boolean
+
+        mode_helper:
+          name: Helper - rezim filtracie
+          description: "Ocekavane hodnoty: `Auto`, `Eco`, `Standard`, `Intenzivny`."
+          default: ""
+          selector:
+            entity:
+              domain: input_select
+
+        swim_today_helper:
+          name: Helper - kupanie dnes
+          default: ""
+          selector:
+            entity:
+              domain: input_boolean
+
+        manual_boost_helper:
+          name: Helper - manual boost
+          default: ""
+          selector:
+            entity:
+              domain: input_boolean
+
+        fixed_mode:
+          name: Fallback rezim
+          description: Pouzije sa, ak helper rezimu nevyplnis.
+          default: Auto
+          selector:
+            select:
+              mode: list
+              options:
+                - Auto
+                - Eco
+                - Standard
+                - Intenzivny
+
+    schedule_section:
+      name: Casovy plan
+      icon: mdi:clock-outline
+      input:
+        morning_start:
+          name: Rano start
+          default: "08:00:00"
+          selector:
+            time: {}
+
+        noon_start:
+          name: Obed start
+          default: "13:00:00"
+          selector:
+            time: {}
+
+        evening_start:
+          name: Vecer start
+          default: "18:30:00"
+          selector:
+            time: {}
+
+        hard_stop:
+          name: Najneskor stop
+          default: "21:00:00"
+          selector:
+            time: {}
+
+        poll_minutes:
+          name: Interval kontroly
+          description: Ako casto ma automatizacia prehodnotit, ci filter ma bezat.
+          default: 5
+          selector:
+            number:
+              min: 1
+              max: 15
+              step: 1
+              unit_of_measurement: min
+              mode: slider
+
+    eco_section:
+      name: Eco profil
+      icon: mdi:leaf
+      collapsed: true
+      input:
+        eco_morning_min:
+          name: Eco - rano min
+          default: 120
+          selector:
+            number:
+              min: 0
+              max: 360
+              step: 5
+              unit_of_measurement: min
+              mode: box
+
+        eco_noon_min:
+          name: Eco - obed min
+          default: 60
+          selector:
+            number:
+              min: 0
+              max: 240
+              step: 5
+              unit_of_measurement: min
+              mode: box
+
+        eco_evening_min:
+          name: Eco - vecer min
+          default: 30
+          selector:
+            number:
+              min: 0
+              max: 180
+              step: 5
+              unit_of_measurement: min
+              mode: box
+
+    standard_section:
+      name: Standard profil
+      icon: mdi:pool-pump
+      input:
+        standard_morning_min:
+          name: Standard - rano min
+          default: 180
+          selector:
+            number:
+              min: 0
+              max: 360
+              step: 5
+              unit_of_measurement: min
+              mode: box
+
+        standard_noon_min:
+          name: Standard - obed min
+          default: 120
+          selector:
+            number:
+              min: 0
+              max: 240
+              step: 5
+              unit_of_measurement: min
+              mode: box
+
+        standard_evening_min:
+          name: Standard - vecer min
+          default: 60
+          selector:
+            number:
+              min: 0
+              max: 180
+              step: 5
+              unit_of_measurement: min
+              mode: box
+
+    intensive_section:
+      name: Intenzivny profil
+      icon: mdi:weather-sunny-alert
+      collapsed: true
+      input:
+        intensive_morning_min:
+          name: Intenzivny - rano min
+          default: 240
+          selector:
+            number:
+              min: 0
+              max: 360
+              step: 5
+              unit_of_measurement: min
+              mode: box
+
+        intensive_noon_min:
+          name: Intenzivny - obed min
+          default: 120
+          selector:
+            number:
+              min: 0
+              max: 240
+              step: 5
+              unit_of_measurement: min
+              mode: box
+
+        intensive_evening_min:
+          name: Intenzivny - vecer min
+          default: 120
+          selector:
+            number:
+              min: 0
+              max: 240
+              step: 5
+              unit_of_measurement: min
+              mode: box
+
+    auto_thresholds_section:
+      name: Auto - senzory a prahy
+      icon: mdi:chart-bell-curve-cumulative
+      collapsed: true
+      input:
+        uv_sensor:
+          name: UV senzor
+          default: ""
+          selector:
+            entity:
+              domain: sensor
+
+        light_sensor:
+          name: Svetelny senzor
+          default: ""
+          selector:
+            entity:
+              domain: sensor
+
+        auto_temp_threshold:
+          name: Teplota vody prah
+          default: 26
+          selector:
+            number:
+              min: 10
+              max: 35
+              step: 0.5
+              unit_of_measurement: C
+              mode: box
+
+        auto_uv_threshold:
+          name: UV prah
+          default: 6
+          selector:
+            number:
+              min: 0
+              max: 12
+              step: 0.5
+              unit_of_measurement: uv
+              mode: box
+
+        auto_light_threshold:
+          name: Svetlo prah
+          default: 6000
+          selector:
+            number:
+              min: 0
+              max: 50000
+              step: 500
+              unit_of_measurement: lx
+              mode: box
+
+    auto_bonus_section:
+      name: Auto - bonusove minuty
+      icon: mdi:plus-circle-outline
+      collapsed: true
+      description: Tieto minuty sa pouziju iba v rezime `Auto`.
+      input:
+        auto_hot_morning_bonus:
+          name: Horuci den - rano bonus
+          default: 30
+          selector:
+            number:
+              min: 0
+              max: 180
+              step: 5
+              unit_of_measurement: min
+              mode: box
+
+        auto_hot_noon_bonus:
+          name: Horuci den - obed bonus
+          default: 0
+          selector:
+            number:
+              min: 0
+              max: 180
+              step: 5
+              unit_of_measurement: min
+              mode: box
+
+        auto_hot_evening_bonus:
+          name: Horuci den - vecer bonus
+          default: 30
+          selector:
+            number:
+              min: 0
+              max: 180
+              step: 5
+              unit_of_measurement: min
+              mode: box
+
+        auto_swim_morning_bonus:
+          name: Kupanie dnes - rano bonus
+          default: 0
+          selector:
+            number:
+              min: 0
+              max: 180
+              step: 5
+              unit_of_measurement: min
+              mode: box
+
+        auto_swim_noon_bonus:
+          name: Kupanie dnes - obed bonus
+          default: 30
+          selector:
+            number:
+              min: 0
+              max: 180
+              step: 5
+              unit_of_measurement: min
+              mode: box
+
+        auto_swim_evening_bonus:
+          name: Kupanie dnes - vecer bonus
+          default: 30
+          selector:
+            number:
+              min: 0
+              max: 180
+              step: 5
+              unit_of_measurement: min
+              mode: box
+
+        auto_boost_morning_bonus:
+          name: Manual boost - rano bonus
+          default: 30
+          selector:
+            number:
+              min: 0
+              max: 180
+              step: 5
+              unit_of_measurement: min
+              mode: box
+
+        auto_boost_noon_bonus:
+          name: Manual boost - obed bonus
+          default: 30
+          selector:
+            number:
+              min: 0
+              max: 180
+              step: 5
+              unit_of_measurement: min
+              mode: box
+
+        auto_boost_evening_bonus:
+          name: Manual boost - vecer bonus
+          default: 30
+          selector:
+            number:
+              min: 0
+              max: 180
+              step: 5
+              unit_of_measurement: min
+              mode: box
+
+    safety_section:
+      name: Bezpecnost
+      icon: mdi:shield-check-outline
+      collapsed: true
+      input:
+        run_if_filter_unavailable:
+          name: Pustit aj pri nedostupnom spinaci
+          description: Normalne nechaj vypnute.
+          default: false
+          selector:
+            boolean: {}
+
+mode: single
+max_exceeded: silent
+
+variables:
+  filter_switch_entity: !input filter_switch
+  water_temp_sensor_entity: !input water_temp_sensor
+  online_sensor_entity: !input online_sensor
+  enable_helper_entity: !input enable_helper
+  mode_helper_entity: !input mode_helper
+  swim_today_helper_entity: !input swim_today_helper
+  manual_boost_helper_entity: !input manual_boost_helper
+  uv_sensor_entity: !input uv_sensor
+  light_sensor_entity: !input light_sensor
+
+  fixed_mode_value: !input fixed_mode
+  morning_start_value: !input morning_start
+  noon_start_value: !input noon_start
+  evening_start_value: !input evening_start
+  hard_stop_value: !input hard_stop
+  poll_minutes_value: !input poll_minutes
+
+  eco_morning_min_value: !input eco_morning_min
+  eco_noon_min_value: !input eco_noon_min
+  eco_evening_min_value: !input eco_evening_min
+  standard_morning_min_value: !input standard_morning_min
+  standard_noon_min_value: !input standard_noon_min
+  standard_evening_min_value: !input standard_evening_min
+  intensive_morning_min_value: !input intensive_morning_min
+  intensive_noon_min_value: !input intensive_noon_min
+  intensive_evening_min_value: !input intensive_evening_min
+
+  auto_temp_threshold_value: !input auto_temp_threshold
+  auto_uv_threshold_value: !input auto_uv_threshold
+  auto_light_threshold_value: !input auto_light_threshold
+
+  auto_hot_morning_bonus_value: !input auto_hot_morning_bonus
+  auto_hot_noon_bonus_value: !input auto_hot_noon_bonus
+  auto_hot_evening_bonus_value: !input auto_hot_evening_bonus
+  auto_swim_morning_bonus_value: !input auto_swim_morning_bonus
+  auto_swim_noon_bonus_value: !input auto_swim_noon_bonus
+  auto_swim_evening_bonus_value: !input auto_swim_evening_bonus
+  auto_boost_morning_bonus_value: !input auto_boost_morning_bonus
+  auto_boost_noon_bonus_value: !input auto_boost_noon_bonus
+  auto_boost_evening_bonus_value: !input auto_boost_evening_bonus
+  run_if_filter_unavailable_value: !input run_if_filter_unavailable
+
+  selected_mode: >
+    {% set valid = ['Auto', 'Eco', 'Standard', 'Intenzivny'] %}
+    {% set helper_state = states(mode_helper_entity) if mode_helper_entity | string | length > 0 else '' %}
+    {{ helper_state if helper_state in valid else fixed_mode_value }}
+
+  auto_enabled: >
+    {% if enable_helper_entity | string | length > 0 %}
+      {{ is_state(enable_helper_entity, 'on') }}
+    {% else %}
+      true
+    {% endif %}
+
+  swim_today: >
+    {% if swim_today_helper_entity | string | length > 0 %}
+      {{ is_state(swim_today_helper_entity, 'on') }}
+    {% else %}
+      false
+    {% endif %}
+
+  manual_boost: >
+    {% if manual_boost_helper_entity | string | length > 0 %}
+      {{ is_state(manual_boost_helper_entity, 'on') }}
+    {% else %}
+      false
+    {% endif %}
+
+  water_temp: "{{ states(water_temp_sensor_entity) | float(0) }}"
+  uv_value: >
+    {% if uv_sensor_entity | string | length > 0 %}
+      {{ states(uv_sensor_entity) | float(-9999) }}
+    {% else %}
+      -9999
+    {% endif %}
+  light_value: >
+    {% if light_sensor_entity | string | length > 0 %}
+      {{ states(light_sensor_entity) | float(-9999) }}
+    {% else %}
+      -9999
+    {% endif %}
+
+  hot_water: "{{ water_temp >= (auto_temp_threshold_value | float(0)) }}"
+  high_uv: "{{ uv_value >= (auto_uv_threshold_value | float(0)) }}"
+  high_light: "{{ light_value >= (auto_light_threshold_value | float(0)) }}"
+  hot_and_sunny: "{{ hot_water and (high_uv or high_light) }}"
+
+  filter_available: >
+    {% set st = states(filter_switch_entity) %}
+    {% if not run_if_filter_unavailable_value %}
+      {{ st not in ['unavailable', 'unknown', 'none'] }}
+    {% else %}
+      true
+    {% endif %}
+
+  online_ok: >
+    {% if online_sensor_entity | string | length > 0 %}
+      {{ is_state(online_sensor_entity, 'on') }}
+    {% else %}
+      true
+    {% endif %}
+
+  morning_minutes: >
+    {% if selected_mode == 'Eco' %}
+      {{ eco_morning_min_value | int(0) }}
+    {% elif selected_mode == 'Standard' %}
+      {{ standard_morning_min_value | int(0) }}
+    {% elif selected_mode == 'Intenzivny' %}
+      {{ intensive_morning_min_value | int(0) }}
+    {% else %}
+      {{
+        (standard_morning_min_value | int(0))
+        + ((auto_hot_morning_bonus_value | int(0)) if hot_and_sunny else 0)
+        + ((auto_swim_morning_bonus_value | int(0)) if swim_today else 0)
+        + ((auto_boost_morning_bonus_value | int(0)) if manual_boost else 0)
+      }}
+    {% endif %}
+
+  noon_minutes: >
+    {% if selected_mode == 'Eco' %}
+      {{ eco_noon_min_value | int(0) }}
+    {% elif selected_mode == 'Standard' %}
+      {{ standard_noon_min_value | int(0) }}
+    {% elif selected_mode == 'Intenzivny' %}
+      {{ intensive_noon_min_value | int(0) }}
+    {% else %}
+      {{
+        (standard_noon_min_value | int(0))
+        + ((auto_hot_noon_bonus_value | int(0)) if hot_and_sunny else 0)
+        + ((auto_swim_noon_bonus_value | int(0)) if swim_today else 0)
+        + ((auto_boost_noon_bonus_value | int(0)) if manual_boost else 0)
+      }}
+    {% endif %}
+
+  evening_minutes: >
+    {% if selected_mode == 'Eco' %}
+      {{ eco_evening_min_value | int(0) }}
+    {% elif selected_mode == 'Standard' %}
+      {{ standard_evening_min_value | int(0) }}
+    {% elif selected_mode == 'Intenzivny' %}
+      {{ intensive_evening_min_value | int(0) }}
+    {% else %}
+      {{
+        (standard_evening_min_value | int(0))
+        + ((auto_hot_evening_bonus_value | int(0)) if hot_and_sunny else 0)
+        + ((auto_swim_evening_bonus_value | int(0)) if swim_today else 0)
+        + ((auto_boost_evening_bonus_value | int(0)) if manual_boost else 0)
+      }}
+    {% endif %}
+
+  ts_now: "{{ as_timestamp(now()) }}"
+  ts_morning_start: "{{ as_timestamp(today_at(morning_start_value)) }}"
+  ts_noon_start: "{{ as_timestamp(today_at(noon_start_value)) }}"
+  ts_evening_start: "{{ as_timestamp(today_at(evening_start_value)) }}"
+  ts_hard_stop: "{{ as_timestamp(today_at(hard_stop_value)) }}"
+  ts_morning_end: "{{ ts_morning_start + ((morning_minutes | int(0)) * 60) }}"
+  ts_noon_end: "{{ ts_noon_start + ((noon_minutes | int(0)) * 60) }}"
+  ts_evening_end_raw: "{{ ts_evening_start + ((evening_minutes | int(0)) * 60) }}"
+  ts_evening_end: "{{ [ts_evening_end_raw, ts_hard_stop] | min }}"
+
+  window_morning: >
+    {{ (morning_minutes | int(0) > 0) and ts_now >= ts_morning_start and ts_now < ts_morning_end }}
+  window_noon: >
+    {{ (noon_minutes | int(0) > 0) and ts_now >= ts_noon_start and ts_now < ts_noon_end }}
+  window_evening: >
+    {{ (evening_minutes | int(0) > 0) and ts_now >= ts_evening_start and ts_now < ts_evening_end }}
+
+  should_run: >
+    {{
+      auto_enabled
+      and online_ok
+      and filter_available
+      and ts_now < ts_hard_stop
+      and (window_morning or window_noon or window_evening)
+    }}
+
+trigger:
+  - platform: homeassistant
+    event: start
+
+  - platform: time
+    at: !input morning_start
+    id: morning_start
+
+  - platform: time
+    at: !input noon_start
+    id: noon_start
+
+  - platform: time
+    at: !input evening_start
+    id: evening_start
+
+  - platform: time
+    at: !input hard_stop
+    id: hard_stop
+
+  - platform: time_pattern
+    minutes: "/1"
+    id: tick
+
+condition:
+  - condition: template
+    value_template: >
+      {{ (now().minute % (poll_minutes_value | int(1))) == 0 or trigger.id != 'tick' }}
+
+action:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ should_run }}"
+        sequence:
+          - action: switch.turn_on
+            target:
+              entity_id: !input filter_switch
+    default:
+      - action: switch.turn_off
+        target:
+          entity_id: !input filter_switch
