@@ -1,5 +1,5 @@
-alias: Bazen - dynamicka filtracia
-description: Priklad konkretnej instancie nad tvojimi entitami.
+alias: Bazén - dynamická filtrácia
+description: Príklad konkrétnej inštancie nad tvojimi entitami.
 use_blueprint:
   path: animus/bazen_filtracia_dynamicka.yaml
   input:
