@@ -1,86 +1,86 @@
 blueprint:
-  name: Bazen - dynamicka filtracia s dennymi blokmi
+  name: Bazén - dynamická filtrácia s dennými blokmi
   description: |
-    Dynamicka filtracia pre bazen s rannym, obednym a vecernym blokom.
+    Dynamická filtrácia pre bazén s ranným, obedným a večerným blokom.
 
-    Funkcie:
-    - rezimy `Auto`, `Eco`, `Standard`, `Intenzivny`
-    - tri denne bloky filtracie
-    - tvrdy vecerny limit
-    - v `Auto` navysenie podla teploty vody, UV/svetla, kupania a boostu
-    - funguje aj bez helperov, ale s helpermi je ovladanie pohodlnejsie
+    Čo blueprint rieši:
+    - režimy `Auto`, `Eco`, `Standard`, `Intenzívny`
+    - tri denné bloky filtrácie
+    - pevný večerný koniec, aby filter zbytočne nebežal v noci
+    - v režime `Auto` pridáva minúty podľa teploty vody, UV, svetla, kúpania a boostu
+    - funguje aj bez helperov, ale s helpermi sa pohodlnejšie ovláda cez UI
   domain: automation
   author: Codex
   homeassistant:
     min_version: 2024.6.0
   input:
     core_section:
-      name: Zaklad
+      name: Základ
       icon: mdi:pool
-      description: Hlavne entity, ktore blueprint potrebuje.
+      description: Tu nastavíš hlavné entity, bez ktorých automatizácia nemôže fungovať.
       input:
         filter_switch:
-          name: Filter - hlavny spinac
-          description: Spinac alebo rele, ktore realne zapina filter.
+          name: Filter - hlavný spínač
+          description: Spínač alebo relé, ktoré fyzicky zapína filtráciu.
           selector:
             entity:
               domain: switch
 
         water_temp_sensor:
           name: Teplota vody
-          description: Senzor teploty bazena.
+          description: Senzor, z ktorého sa číta aktuálna teplota vody v bazéne.
           selector:
             entity:
               domain: sensor
 
         online_sensor:
           name: Online senzor
-          description: Volitelne. Ak je zadany a nie je `on`, filter sa nepusti.
+          description: Voliteľné. Ak je vyplnený a nie je v stave `on`, filter sa nespustí.
           default: ""
           selector:
             entity:
               domain: binary_sensor
 
     helpers_section:
-      name: Volitelne helpery
+      name: Voliteľné helpery
       icon: mdi:tune-variant
       collapsed: true
       description: |
-        Ak helpery nevyplnis, blueprint ide podla pevnych nastaveni.
-        Ak ich vyplnis, vies rezim a boosty menit pohodlne cez UI.
+        Ak helpery nevyplníš, blueprint pôjde podľa pevných nastavení nižšie.
+        Ak ich vyplníš, režim a doplnkové voľby budeš vedieť pohodlne meniť priamo v rozhraní Home Assistant.
       input:
         enable_helper:
-          name: Helper - automatika povolena
+          name: Helper - automatika povolená
           default: ""
           selector:
             entity:
               domain: input_boolean
 
         mode_helper:
-          name: Helper - rezim filtracie
-          description: "Ocekavane hodnoty: `Auto`, `Eco`, `Standard`, `Intenzivny`."
+          name: Helper - režim filtrácie
+          description: "Očakávané hodnoty: `Auto`, `Eco`, `Standard`, `Intenzívny`."
           default: ""
           selector:
             entity:
               domain: input_select
 
         swim_today_helper:
-          name: Helper - kupanie dnes
+          name: Helper - kúpanie dnes
           default: ""
           selector:
             entity:
               domain: input_boolean
 
         manual_boost_helper:
-          name: Helper - manual boost
+          name: Helper - manuálny boost
           default: ""
           selector:
             entity:
               domain: input_boolean
 
         fixed_mode:
-          name: Fallback rezim
-          description: Pouzije sa, ak helper rezimu nevyplnis.
+          name: Náhradný režim
+          description: Použije sa vtedy, keď nevyplníš helper pre režim filtrácie.
           default: Auto
           selector:
             select:
@@ -89,39 +89,40 @@ blueprint:
                 - Auto
                 - Eco
                 - Standard
-                - Intenzivny
+                - Intenzívny
 
     schedule_section:
-      name: Casovy plan
+      name: Časový plán
       icon: mdi:clock-outline
+      description: Nastav začiatky jednotlivých blokov a najneskorší večerný čas vypnutia.
       input:
         morning_start:
-          name: Rano start
+          name: Ráno - začiatok
           default: "08:00:00"
           selector:
             time: {}
 
         noon_start:
-          name: Obed start
+          name: Obed - začiatok
           default: "13:00:00"
           selector:
             time: {}
 
         evening_start:
-          name: Vecer start
+          name: Večer - začiatok
           default: "18:30:00"
           selector:
             time: {}
 
         hard_stop:
-          name: Najneskor stop
+          name: Najneskoršie vypnutie
           default: "21:00:00"
           selector:
             time: {}
 
         poll_minutes:
           name: Interval kontroly
-          description: Ako casto ma automatizacia prehodnotit, ci filter ma bezat.
+          description: Ako často má automatizácia prehodnotiť, či má filter práve bežať.
           default: 5
           selector:
             number:
@@ -135,9 +136,10 @@ blueprint:
       name: Eco profil
       icon: mdi:leaf
       collapsed: true
+      description: Úspornejší režim pre bežné dni alebo chladnejšiu vodu.
       input:
         eco_morning_min:
-          name: Eco - rano min
+          name: Eco - ráno (min)
           default: 120
           selector:
             number:
@@ -148,7 +150,7 @@ blueprint:
               mode: box
 
         eco_noon_min:
-          name: Eco - obed min
+          name: Eco - obed (min)
           default: 60
           selector:
             number:
@@ -159,7 +161,7 @@ blueprint:
               mode: box
 
         eco_evening_min:
-          name: Eco - vecer min
+          name: Eco - večer (min)
           default: 30
           selector:
             number:
@@ -172,9 +174,10 @@ blueprint:
     standard_section:
       name: Standard profil
       icon: mdi:pool-pump
+      description: Odporúčaný základ pre bežnú prevádzku bazéna.
       input:
         standard_morning_min:
-          name: Standard - rano min
+          name: Standard - ráno (min)
           default: 180
           selector:
             number:
@@ -185,7 +188,7 @@ blueprint:
               mode: box
 
         standard_noon_min:
-          name: Standard - obed min
+          name: Standard - obed (min)
           default: 120
           selector:
             number:
@@ -196,7 +199,7 @@ blueprint:
               mode: box
 
         standard_evening_min:
-          name: Standard - vecer min
+          name: Standard - večer (min)
           default: 60
           selector:
             number:
@@ -207,12 +210,13 @@ blueprint:
               mode: box
 
     intensive_section:
-      name: Intenzivny profil
+      name: Intenzívny profil
       icon: mdi:weather-sunny-alert
       collapsed: true
+      description: Silnejší režim pre teplé dni, väčšiu záťaž alebo častejšie kúpanie.
       input:
         intensive_morning_min:
-          name: Intenzivny - rano min
+          name: Intenzívny - ráno (min)
           default: 240
           selector:
             number:
@@ -223,7 +227,7 @@ blueprint:
               mode: box
 
         intensive_noon_min:
-          name: Intenzivny - obed min
+          name: Intenzívny - obed (min)
           default: 120
           selector:
             number:
@@ -234,7 +238,7 @@ blueprint:
               mode: box
 
         intensive_evening_min:
-          name: Intenzivny - vecer min
+          name: Intenzívny - večer (min)
           default: 120
           selector:
             number:
@@ -248,6 +252,7 @@ blueprint:
       name: Auto - senzory a prahy
       icon: mdi:chart-bell-curve-cumulative
       collapsed: true
+      description: Tieto hodnoty určujú, kedy má režim `Auto` pridať ďalší čas filtrácie.
       input:
         uv_sensor:
           name: UV senzor
@@ -257,14 +262,14 @@ blueprint:
               domain: sensor
 
         light_sensor:
-          name: Svetelny senzor
+          name: Svetelný senzor
           default: ""
           selector:
             entity:
               domain: sensor
 
         auto_temp_threshold:
-          name: Teplota vody prah
+          name: Prah teploty vody
           default: 26
           selector:
             number:
@@ -286,7 +291,7 @@ blueprint:
               mode: box
 
         auto_light_threshold:
-          name: Svetlo prah
+          name: Prah intenzity svetla
           default: 6000
           selector:
             number:
@@ -297,13 +302,13 @@ blueprint:
               mode: box
 
     auto_bonus_section:
-      name: Auto - bonusove minuty
+      name: Auto - bonusové minúty
       icon: mdi:plus-circle-outline
       collapsed: true
-      description: Tieto minuty sa pouziju iba v rezime `Auto`.
+      description: Tieto minúty sa použijú iba v režime `Auto`, keď sú splnené príslušné podmienky.
       input:
         auto_hot_morning_bonus:
-          name: Horuci den - rano bonus
+          name: Horúci deň - ráno (min navyše)
           default: 30
           selector:
             number:
@@ -314,7 +319,7 @@ blueprint:
               mode: box
 
         auto_hot_noon_bonus:
-          name: Horuci den - obed bonus
+          name: Horúci deň - obed (min navyše)
           default: 0
           selector:
             number:
@@ -325,7 +330,7 @@ blueprint:
               mode: box
 
         auto_hot_evening_bonus:
-          name: Horuci den - vecer bonus
+          name: Horúci deň - večer (min navyše)
           default: 30
           selector:
             number:
@@ -336,7 +341,7 @@ blueprint:
               mode: box
 
         auto_swim_morning_bonus:
-          name: Kupanie dnes - rano bonus
+          name: Kúpanie dnes - ráno (min navyše)
           default: 0
           selector:
             number:
@@ -347,7 +352,7 @@ blueprint:
               mode: box
 
         auto_swim_noon_bonus:
-          name: Kupanie dnes - obed bonus
+          name: Kúpanie dnes - obed (min navyše)
           default: 30
           selector:
             number:
@@ -358,7 +363,7 @@ blueprint:
               mode: box
 
         auto_swim_evening_bonus:
-          name: Kupanie dnes - vecer bonus
+          name: Kúpanie dnes - večer (min navyše)
           default: 30
           selector:
             number:
@@ -369,7 +374,7 @@ blueprint:
               mode: box
 
         auto_boost_morning_bonus:
-          name: Manual boost - rano bonus
+          name: Manuálny boost - ráno (min navyše)
           default: 30
           selector:
             number:
@@ -380,7 +385,7 @@ blueprint:
               mode: box
 
         auto_boost_noon_bonus:
-          name: Manual boost - obed bonus
+          name: Manuálny boost - obed (min navyše)
           default: 30
           selector:
             number:
@@ -391,7 +396,7 @@ blueprint:
               mode: box
 
         auto_boost_evening_bonus:
-          name: Manual boost - vecer bonus
+          name: Manuálny boost - večer (min navyše)
           default: 30
           selector:
             number:
@@ -402,13 +407,14 @@ blueprint:
               mode: box
 
     safety_section:
-      name: Bezpecnost
+      name: Bezpečnosť
       icon: mdi:shield-check-outline
       collapsed: true
+      description: Ochranné správanie pre prípady, keď je zariadenie nedostupné alebo má neplatný stav.
       input:
         run_if_filter_unavailable:
-          name: Pustit aj pri nedostupnom spinaci
-          description: Normalne nechaj vypnute.
+          name: Pustiť aj pri nedostupnom spínači
+          description: Bežne nechaj vypnuté. Zapínaj len vtedy, ak presne vieš, prečo to potrebuješ.
           default: false
           selector:
             boolean: {}
@@ -460,7 +466,7 @@ variables:
   run_if_filter_unavailable_value: !input run_if_filter_unavailable
 
   selected_mode: >
-    {% set valid = ['Auto', 'Eco', 'Standard', 'Intenzivny'] %}
+    {% set valid = ['Auto', 'Eco', 'Standard', 'Intenzívny'] %}
     {% set helper_state = states(mode_helper_entity) if mode_helper_entity | string | length > 0 else '' %}
     {{ helper_state if helper_state in valid else fixed_mode_value }}
 
@@ -524,7 +530,7 @@ variables:
       {{ eco_morning_min_value | int(0) }}
     {% elif selected_mode == 'Standard' %}
       {{ standard_morning_min_value | int(0) }}
-    {% elif selected_mode == 'Intenzivny' %}
+    {% elif selected_mode == 'Intenzívny' %}
       {{ intensive_morning_min_value | int(0) }}
     {% else %}
       {{
@@ -540,7 +546,7 @@ variables:
       {{ eco_noon_min_value | int(0) }}
     {% elif selected_mode == 'Standard' %}
       {{ standard_noon_min_value | int(0) }}
-    {% elif selected_mode == 'Intenzivny' %}
+    {% elif selected_mode == 'Intenzívny' %}
       {{ intensive_noon_min_value | int(0) }}
     {% else %}
       {{
@@ -556,7 +562,7 @@ variables:
       {{ eco_evening_min_value | int(0) }}
     {% elif selected_mode == 'Standard' %}
       {{ standard_evening_min_value | int(0) }}
-    {% elif selected_mode == 'Intenzivny' %}
+    {% elif selected_mode == 'Intenzívny' %}
       {{ intensive_evening_min_value | int(0) }}
     {% else %}
       {{
