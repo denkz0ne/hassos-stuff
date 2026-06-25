@@ -1,0 +1,569 @@
+blueprint:
+  name: Dvere/okno - kontakt, zvuk a opakovany alert
+  description: |
+    Univerzalny blueprint pre jeden kontaktovy senzor dveri alebo okna.
+
+    Jedna instancia blueprintu ovlada jeden binary_sensor a jeden vlastny timer.
+    Podporuje zvuk pri otvoreni/zatvoreni, oneskoreny alert, opakovanie alertu
+    az do zatvorenia, nocny rezim a volitelne telefonne notifikacie.
+  domain: automation
+  author: Codex
+  homeassistant:
+    min_version: 2024.6.0
+  input:
+    core_section:
+      name: Zaklad
+      icon: mdi:door-open
+      description: Hlavne entity pre jednu instanciu dveri alebo okna.
+      input:
+        contact_sensor:
+          name: Kontaktovy senzor
+          description: Binary sensor dveri alebo okna. Otvorene je typicky `on`, zatvorene `off`.
+          selector:
+            entity:
+              domain: binary_sensor
+
+        contact_name:
+          name: Nazov v spravach
+          description: Ludsky nazov pouzity v notifikaciach.
+          default: Dvere
+          selector:
+            text: {}
+
+        reminder_timer:
+          name: Timer pre tento kontakt
+          description: Samostatny timer pre tuto instanciu blueprintu. Nepouzivaj rovnaky timer vo viacerych instanciach.
+          selector:
+            entity:
+              domain: timer
+
+        open_state:
+          name: Stav otvorene
+          default: "on"
+          selector:
+            select:
+              mode: dropdown
+              options:
+                - "on"
+                - "off"
+
+        closed_state:
+          name: Stav zatvorene
+          default: "off"
+          selector:
+            select:
+              mode: dropdown
+              options:
+                - "off"
+                - "on"
+
+    timing_section:
+      name: Casovanie
+      icon: mdi:timer-outline
+      description: Cas do prveho alertu a interval opakovania.
+      input:
+        alert_after:
+          name: Alert po
+          description: Po akom case otvorenia sa spusti zabudnute otvorenie.
+          default:
+            hours: 0
+            minutes: 1
+            seconds: 0
+          selector:
+            duration: {}
+
+        repeat_interval:
+          name: Interval opakovania
+          description: Ako casto sa ma alert opakovat, kym je kontakt stale otvoreny.
+          default:
+            hours: 0
+            minutes: 0
+            seconds: 10
+          selector:
+            duration: {}
+
+        max_repeats:
+          name: Maximalny pocet opakovani
+          description: `0` znamena opakovat az do zatvorenia.
+          default: 0
+          selector:
+            number:
+              min: 0
+              max: 100
+              step: 1
+              mode: box
+
+    sound_section:
+      name: Zvuky
+      icon: mdi:volume-high
+      description: Zvuky sa prehravaju priamo cez media_player, bez externych skriptov.
+      input:
+        media_player:
+          name: Media player
+          description: Prehravac pre zvuk otvorenia, zatvorenia a alertu.
+          selector:
+            entity:
+              domain: media_player
+
+        open_sound_enabled:
+          name: Zvuk pri otvoreni
+          default: true
+          selector:
+            boolean: {}
+
+        open_sound:
+          name: Zvuk otvorenia
+          description: Media source alebo cesta k suboru, napriklad `media-source://media_source/local/dvere.mp3`.
+          default: "media-source://media_source/local/dvere.mp3"
+          selector:
+            text: {}
+
+        open_volume:
+          name: Hlasitost otvorenia
+          default: 0.7
+          selector:
+            number:
+              min: 0
+              max: 1
+              step: 0.05
+              mode: slider
+
+        close_sound_enabled:
+          name: Zvuk pri zatvoreni
+          default: true
+          selector:
+            boolean: {}
+
+        close_sound:
+          name: Zvuk zatvorenia
+          description: Media source alebo cesta k suboru. Moze byt rovnaky ako zvuk otvorenia.
+          default: "media-source://media_source/local/dvere.mp3"
+          selector:
+            text: {}
+
+        close_volume:
+          name: Hlasitost zatvorenia
+          default: 0.7
+          selector:
+            number:
+              min: 0
+              max: 1
+              step: 0.05
+              mode: slider
+
+        alert_sound_enabled:
+          name: Alert zvuk
+          default: true
+          selector:
+            boolean: {}
+
+        alert_sound:
+          name: Zvuk alertu
+          description: Zvuk prehravany po dobehnuti timeru a potom opakovane.
+          default: "media-source://media_source/local/alert.mp3"
+          selector:
+            text: {}
+
+        alert_volume:
+          name: Hlasitost alertu
+          description: Po skonceni alertu sa povodna hlasitost media playera vzdy obnovi.
+          default: 0.85
+          selector:
+            number:
+              min: 0
+              max: 1
+              step: 0.05
+              mode: slider
+
+    night_section:
+      name: Nocny rezim
+      icon: mdi:weather-night
+      collapsed: true
+      description: Casove okno, v ktorom mozes potlacit zvuky alebo povolit len telefonne notifikacie.
+      input:
+        night_mode_enabled:
+          name: Zapnut nocny rezim
+          default: false
+          selector:
+            boolean: {}
+
+        night_start:
+          name: Noc od
+          default: "22:00:00"
+          selector:
+            time: {}
+
+        night_end:
+          name: Noc do
+          default: "06:00:00"
+          selector:
+            time: {}
+
+        night_sound_enabled:
+          name: Hrat zvuky aj v noci
+          default: false
+          selector:
+            boolean: {}
+
+        night_phone_notifications_enabled:
+          name: Posielat telefonne notifikacie v noci
+          default: true
+          selector:
+            boolean: {}
+
+        night_alert_volume:
+          name: Hlasitost alertu v noci
+          default: 0.35
+          selector:
+            number:
+              min: 0
+              max: 1
+              step: 0.05
+              mode: slider
+
+    phone_section:
+      name: Telefonne notifikacie
+      icon: mdi:cellphone-message
+      collapsed: true
+      description: Zadaj notify sluzbu telefonu alebo skupiny. Ak ostane prazdna, telefonne notifikacie sa preskocia.
+      input:
+        phone_notify_service:
+          name: Notify sluzba
+          description: Napriklad `notify.mobile_app_poco_x5` alebo `notify.domcekbot_m`.
+          default: ""
+          selector:
+            text: {}
+
+        phone_notify_on_open:
+          name: Poslat pri otvoreni
+          default: false
+          selector:
+            boolean: {}
+
+        phone_notify_on_close:
+          name: Poslat pri zatvoreni
+          default: false
+          selector:
+            boolean: {}
+
+        phone_notify_on_alert:
+          name: Poslat pri zabudnutom otvoreni
+          default: true
+          selector:
+            boolean: {}
+
+        phone_notify_on_closed_after_alert:
+          name: Poslat po zatvoreni po alerte
+          default: true
+          selector:
+            boolean: {}
+
+        open_title:
+          name: Nadpis otvorenia
+          default: "{name}"
+          selector:
+            text: {}
+
+        open_message:
+          name: Sprava otvorenia
+          default: "{name} otvorene"
+          selector:
+            text: {}
+
+        close_title:
+          name: Nadpis zatvorenia
+          default: "{name}"
+          selector:
+            text: {}
+
+        close_message:
+          name: Sprava zatvorenia
+          default: "{name} zatvorene"
+          selector:
+            text: {}
+
+        alert_title:
+          name: Nadpis alertu
+          default: "{name}"
+          selector:
+            text: {}
+
+        alert_message:
+          name: Sprava alertu
+          default: "{name} je stale otvorene"
+          selector:
+            text: {}
+
+        closed_after_alert_title:
+          name: Nadpis zatvorenia po alerte
+          default: "{name}"
+          selector:
+            text: {}
+
+        closed_after_alert_message:
+          name: Sprava zatvorenia po alerte
+          default: "{name} bolo zatvorene"
+          selector:
+            text: {}
+
+    actions_section:
+      name: Volitelne akcie
+      icon: mdi:gesture-tap-button
+      collapsed: true
+      description: Doplnkove akcie pre pokrocile pouzitie bez upravy blueprintu.
+      input:
+        open_actions:
+          name: Akcie pri otvoreni
+          default: []
+          selector:
+            action: {}
+
+        close_actions:
+          name: Akcie pri zatvoreni
+          default: []
+          selector:
+            action: {}
+
+        alert_actions:
+          name: Akcie pri kazdom alerte
+          default: []
+          selector:
+            action: {}
+
+        closed_after_alert_actions:
+          name: Akcie po zatvoreni po alerte
+          default: []
+          selector:
+            action: {}
+
+mode: parallel
+max: 6
+max_exceeded: silent
+
+variables:
+  contact_sensor_entity: !input contact_sensor
+  contact_name_value: !input contact_name
+  reminder_timer_entity: !input reminder_timer
+  media_player_entity: !input media_player
+  open_state_value: !input open_state
+  closed_state_value: !input closed_state
+
+  max_repeats_value: !input max_repeats
+
+  open_sound_enabled_value: !input open_sound_enabled
+  open_sound_value: !input open_sound
+  open_volume_value: !input open_volume
+  close_sound_enabled_value: !input close_sound_enabled
+  close_sound_value: !input close_sound
+  close_volume_value: !input close_volume
+  alert_sound_enabled_value: !input alert_sound_enabled
+  alert_sound_value: !input alert_sound
+  alert_volume_value: !input alert_volume
+
+  night_mode_enabled_value: !input night_mode_enabled
+  night_start_value: !input night_start
+  night_end_value: !input night_end
+  night_sound_enabled_value: !input night_sound_enabled
+  night_phone_notifications_enabled_value: !input night_phone_notifications_enabled
+  night_alert_volume_value: !input night_alert_volume
+
+  phone_notify_service_value: !input phone_notify_service
+  phone_notify_on_open_value: !input phone_notify_on_open
+  phone_notify_on_close_value: !input phone_notify_on_close
+  phone_notify_on_alert_value: !input phone_notify_on_alert
+  phone_notify_on_closed_after_alert_value: !input phone_notify_on_closed_after_alert
+
+  open_title_value: !input open_title
+  open_message_value: !input open_message
+  close_title_value: !input close_title
+  close_message_value: !input close_message
+  alert_title_value: !input alert_title
+  alert_message_value: !input alert_message
+  closed_after_alert_title_value: !input closed_after_alert_title
+  closed_after_alert_message_value: !input closed_after_alert_message
+
+  is_night: >-
+    {% set now_time = now().strftime('%H:%M:%S') %}
+    {% if not night_mode_enabled_value %}
+      false
+    {% elif night_start_value < night_end_value %}
+      {{ night_start_value <= now_time < night_end_value }}
+    {% else %}
+      {{ now_time >= night_start_value or now_time < night_end_value }}
+    {% endif %}
+
+  sound_allowed: "{{ (not is_night) or night_sound_enabled_value }}"
+  phone_allowed: >-
+    {{
+      phone_notify_service_value | string | length > 0
+      and ((not is_night) or night_phone_notifications_enabled_value)
+    }}
+  current_alert_volume: "{{ night_alert_volume_value if is_night else alert_volume_value }}"
+
+trigger:
+  - platform: state
+    entity_id: !input contact_sensor
+    from: !input closed_state
+    to: !input open_state
+    id: opened
+
+  - platform: state
+    entity_id: !input contact_sensor
+    from: !input open_state
+    to: !input closed_state
+    id: closed
+
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: !input reminder_timer
+    id: timer_finished
+
+condition: []
+
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: opened
+        sequence:
+          - if:
+              - condition: template
+                value_template: "{{ sound_allowed and open_sound_enabled_value and open_sound_value | string | length > 0 }}"
+            then:
+              - action: media_player.volume_set
+                target:
+                  entity_id: !input media_player
+                data:
+                  volume_level: !input open_volume
+              - action: media_player.play_media
+                target:
+                  entity_id: !input media_player
+                data:
+                  media_content_id: !input open_sound
+                  media_content_type: audio/mpeg
+
+          - if:
+              - condition: template
+                value_template: "{{ phone_allowed and phone_notify_on_open_value }}"
+            then:
+              - action: "{{ phone_notify_service_value }}"
+                data:
+                  title: "{{ open_title_value | replace('{name}', contact_name_value) }}"
+                  message: "{{ open_message_value | replace('{name}', contact_name_value) }}"
+
+          - sequence: !input open_actions
+
+          - action: timer.start
+            target:
+              entity_id: !input reminder_timer
+            data:
+              duration: !input alert_after
+
+      - conditions:
+          - condition: trigger
+            id: closed
+        sequence:
+          - action: timer.cancel
+            target:
+              entity_id: !input reminder_timer
+
+          - if:
+              - condition: template
+                value_template: "{{ sound_allowed and close_sound_enabled_value and close_sound_value | string | length > 0 }}"
+            then:
+              - action: media_player.volume_set
+                target:
+                  entity_id: !input media_player
+                data:
+                  volume_level: !input close_volume
+              - action: media_player.play_media
+                target:
+                  entity_id: !input media_player
+                data:
+                  media_content_id: !input close_sound
+                  media_content_type: audio/mpeg
+
+          - if:
+              - condition: template
+                value_template: "{{ phone_allowed and phone_notify_on_close_value }}"
+            then:
+              - action: "{{ phone_notify_service_value }}"
+                data:
+                  title: "{{ close_title_value | replace('{name}', contact_name_value) }}"
+                  message: "{{ close_message_value | replace('{name}', contact_name_value) }}"
+
+          - sequence: !input close_actions
+
+      - conditions:
+          - condition: trigger
+            id: timer_finished
+          - condition: template
+            value_template: "{{ is_state(contact_sensor_entity, open_state_value) }}"
+        sequence:
+          - variables:
+              original_volume: "{{ state_attr(media_player_entity, 'volume_level') | float(0.5) }}"
+
+          - repeat:
+              while:
+                - condition: template
+                  value_template: >-
+                    {{
+                      is_state(contact_sensor_entity, open_state_value)
+                      and (
+                        max_repeats_value | int(0) == 0
+                        or repeat.index <= max_repeats_value | int(0)
+                      )
+                    }}
+              sequence:
+                - if:
+                    - condition: template
+                      value_template: "{{ sound_allowed and alert_sound_enabled_value and alert_sound_value | string | length > 0 }}"
+                  then:
+                    - action: media_player.volume_set
+                      target:
+                        entity_id: !input media_player
+                      data:
+                        volume_level: "{{ current_alert_volume | float(0.85) }}"
+                    - action: media_player.play_media
+                      target:
+                        entity_id: !input media_player
+                      data:
+                        media_content_id: !input alert_sound
+                        media_content_type: audio/mpeg
+
+                - if:
+                    - condition: template
+                      value_template: "{{ phone_allowed and phone_notify_on_alert_value }}"
+                  then:
+                    - action: "{{ phone_notify_service_value }}"
+                      data:
+                        title: "{{ alert_title_value | replace('{name}', contact_name_value) }}"
+                        message: "{{ alert_message_value | replace('{name}', contact_name_value) }}"
+
+                - sequence: !input alert_actions
+
+                - wait_template: "{{ is_state(contact_sensor_entity, closed_state_value) }}"
+                  timeout: !input repeat_interval
+                  continue_on_timeout: true
+
+          - action: media_player.volume_set
+            target:
+              entity_id: !input media_player
+            data:
+              volume_level: "{{ original_volume }}"
+
+          - if:
+              - condition: template
+                value_template: "{{ is_state(contact_sensor_entity, closed_state_value) }}"
+            then:
+              - if:
+                  - condition: template
+                    value_template: "{{ phone_allowed and phone_notify_on_closed_after_alert_value }}"
+                then:
+                  - action: "{{ phone_notify_service_value }}"
+                    data:
+                      title: "{{ closed_after_alert_title_value | replace('{name}', contact_name_value) }}"
+                      message: "{{ closed_after_alert_message_value | replace('{name}', contact_name_value) }}"
+
+              - sequence: !input closed_after_alert_actions
