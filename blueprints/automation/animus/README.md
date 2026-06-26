@@ -28,11 +28,15 @@ Podporuje rezimy:
 - jedna instancia = jeden `binary_sensor`
 - kazda instancia pouziva vlastny externy `timer`
 - timer sa vybera v instancii blueprintu a je viditelny na dashboarde
-- zvuk otvorenia, zatvorenia a alertu sa prehrava priamo cez vybrany `media_player`
-- alert sa vie opakovat az do zatvorenia
-- po alerte sa obnovi povodna hlasitost prehravaca
+- kontaktovy senzor je filtrovany na `door` a `window`
+- zvuky sa vyberaju cez Home Assistant media picker
+- zvuk otvorenia, zatvorenia a alertu sa prehrava cez jeden alebo viac vybranych `media_player`
+- mobilne notifikacie sa nastavuju cez action picker
+- mobilny alert pri zabudnutom otvoreni sa posiela iba raz
+- periodicky sa opakuje iba zvuk alertu
+- po alerte sa obnovi povodna hlasitost prehravacov
 - podporuje nocny rezim s vlastnym casom od-do
-- telefonne notifikacie su volitelne
+- mobilne notifikacie su volitelne
 
 ## Import
 
