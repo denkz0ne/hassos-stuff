@@ -84,7 +84,7 @@ blueprint:
 
         max_repeats:
           name: Maximalny pocet opakovani
-          description: `0` znamena opakovat az do zatvorenia.
+          description: "0 znamena opakovat az do zatvorenia."
           default: 0
           selector:
             number:
