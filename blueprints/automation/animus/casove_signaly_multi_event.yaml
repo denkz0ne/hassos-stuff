@@ -123,7 +123,7 @@ blueprint:
                                   selector:
                                     boolean: {}
 
-                        Cislo:
+                        Číslo:
                           selector:
                             object:
                               fields:
@@ -160,11 +160,10 @@ blueprint:
                                   label: Hodnota
                                   required: true
                                   selector:
-                                    number:
-                                      mode: box
-                                      step: 0.01
+                                    text:
+                                      type: number
 
-                        Text:
+                        "Text / stav":
                           selector:
                             object:
                               fields:
@@ -541,7 +540,7 @@ actions:
                   {% set wanted = cfg.get('value', true) | bool %}
                   {{ is_state(entity_id, 'on') if wanted else is_state(entity_id, 'off') }}
 
-                {% elif choice == 'Cislo' %}
+                {% elif choice == 'Číslo' %}
                   {% set raw_current = states(entity_id) %}
                   {% set current = raw_current | float(none) %}
                   {% set wanted = cfg.get('value') | float(none) %}
@@ -564,7 +563,7 @@ actions:
                     {{ false }}
                   {% endif %}
 
-                {% elif choice == 'Text' %}
+                {% elif choice == 'Text / stav' %}
                   {% set current = states(entity_id) %}
                   {% set wanted = cfg.get('value', '') | string %}
                   {% set op = cfg.get('operator', 'eq') %}
