@@ -39,12 +39,12 @@ Podporuje rezimy:
 - podporuje nocny rezim s vlastnym casom od-do
 - mobilne notifikacie su volitelne
 
-## Plánovač upozornení (BETA)
+## Časové znamenia (BETA)
 
-`casove_signaly_multi_event.yaml` je samostatná blueprint automatizácia s ľubovoľným počtom časových udalostí.
+`casove_signaly_multi_event.yaml` je samostatná blueprint automatizácia pre ľubovoľný počet časových znamení.
 Nevyzaduje pomocne skripty ani helpery.
 
-Kazda udalost sa nastavuje cez moderny `object` selector s `multiple: true`.
+Každé znamenie sa nastavuje cez moderný `object` selector s `multiple: true`.
 
 Podporuje:
 
@@ -114,7 +114,7 @@ V sekcii `Kalendar bez helperov` mozes pridat datumove vynimky:
 
 ### Vlastne HA akcie
 
-Kazda udalost ma pole `Vlastne HA akcie` s natívnym Home Assistant Action selectorom.
+Každé znamenie má pole `Doplnkový program` s natívnym Home Assistant Action selectorom.
 
 BETA runtime interpreter podporuje:
 
