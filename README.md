@@ -20,7 +20,7 @@ Dynamicka filtracia bazena v dennych blokoch s rezimami `Auto`, `Eco`, `Standard
 
 Kontaktovy senzor, zvuky, timer, nocny rezim a mobilne akcie.
 
-### Casove signaly - autonomny multi-event chime & notifier
+### Plánovač upozornení
 
 Jedna blueprint instancia s lubovolnym poctom casovych udalosti. Kazda moze mat vlastne dni, typovu podmienku, zvuk, hlasitost s obnovenim povodnej hodnoty, opakovanie a duration pauzu, notify, AAS MQTT signalizaciu pre vsetky alebo vybrane ESP a vlastne Home Assistant akcie.
 
