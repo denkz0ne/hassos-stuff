@@ -20,9 +20,9 @@ Dynamicka filtracia bazena v dennych blokoch s rezimami `Auto`, `Eco`, `Standard
 
 Kontaktovy senzor, zvuky, timer, nocny rezim a mobilne akcie.
 
-### Plánovač upozornení
+### Časové znamenia
 
-Jedna blueprint instancia s lubovolnym poctom casovych udalosti. Kazda moze mat vlastne dni, typovu podmienku, zvuk, hlasitost s obnovenim povodnej hodnoty, opakovanie a duration pauzu, notify, AAS MQTT signalizaciu pre vsetky alebo vybrane ESP a vlastne Home Assistant akcie.
+Jedna blueprint inštancia s ľubovoľným počtom časových znamení. Každé môže mať vlastné dni, podmienku, zvuk, hlasitosť s obnovením pôvodnej hodnoty, opakovanie, prestávku, textové oznámenie, AAS signalizáciu a doplnkový program.
 
 Podrobnosti, import a poznamky k beta verzii su v:
 
