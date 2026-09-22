@@ -5,33 +5,25 @@ Home Assistant veci, helpery a blueprinty.
 ## Obsah
 
 - `blueprints/automation/animus/bazen_filtracia_dynamicka.yaml`
+- `blueprints/automation/animus/dvere_okna_kontakt_alert.yaml`
+- `blueprints/automation/animus/casove_signaly_multi_event.yaml`
 - `blueprints/automation/animus/example_instance_bazen.yaml`
 - `blueprints/automation/animus/README.md`
 
-## Pool filtration blueprint
+## Blueprinty
 
-Tento blueprint rieši dynamickú filtráciu bazéna v denných blokoch:
+### Pool filtration
 
-- ráno
-- obed
-- večer
-- najneskoršie večerné vypnutie
+Dynamicka filtracia bazena v dennych blokoch s rezimami `Auto`, `Eco`, `Standard` a `Intenzivny`.
 
-Podporuje režimy:
+### Dvere / okno alert
 
-- `Auto`
-- `Eco`
-- `Standard`
-- `Intenzívny`
+Kontaktovy senzor, zvuky, timer, nocny rezim a mobilne akcie.
 
-V režime `Auto` vie zohľadniť:
+### Casove signaly - multi-event chime & notifier
 
-- teplotu vody
-- UV
-- svetlo
-- kúpanie počas dňa
-- manuálny boost
+Jedna blueprint instancia s lubovolnym poctom casovych udalosti. Kazda moze mat vlastne dni, zvuk a opakovanie, notify, svetelny signal, Visual/ESP script a Extra script.
 
-Import a príklad použitia sú v:
+Podrobnosti, import a poznamky k beta verzii su v:
 
 - `blueprints/automation/animus/README.md`
