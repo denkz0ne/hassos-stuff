@@ -1,9 +1,10 @@
 blueprint:
-  name: "Plánovač upozornení"
+  name: "Časové znamenia"
   description: |
-    Naplánuj ľubovoľný počet upozornení v jednej automatizácii.
-    Každé môže mať vlastné dni, podmienku, zvuk, AAS signalizáciu,
-    notifikáciu a ďalšie akcie. Bez helperov a pomocných skriptov.
+    Časové znamenie ohlásilo... čo si nastavíš. 🙂
+    Naplánuj ľubovoľný počet zvukových, svetelných a ďalších oznámení
+    v jednej automatizácii. Každé znamenie môže mať vlastný čas, dni,
+    podmienku, zvuk, AAS signalizáciu, notifikáciu a ďalšie akcie.
 
     Beta: čas sa vyhodnocuje po minútach. Vnorené bloky choose, repeat,
     parallel a if v poli Ďalšie akcie zatiaľ nie sú podporované.
@@ -14,13 +15,13 @@ blueprint:
 
   input:
     events_section:
-      name: Udalosti
+      name: Časové znamenia
       icon: mdi:calendar-clock
-      description: Nastav časy a čo sa má pri každom z nich vykonať.
+      description: Nastav, kedy má zaznieť znamenie a čo má pri ňom nasledovať.
       input:
         events:
-          name: Časové udalosti
-          description: Každý záznam je jedno samostatné upozornenie.
+          name: Znamenia
+          description: Každý záznam je jedno samostatné časové znamenie.
           default: []
           selector:
             object:
@@ -29,30 +30,30 @@ blueprint:
               description_field: time
               fields:
                 name:
-                  label: Názov
+                  label: Názov znamenia
                   required: true
                   selector:
                     text: {}
 
                 time:
-                  label: Čas
+                  label: Čas hlásenia
                   required: true
                   selector:
                     time: {}
 
                 state:
-                  label: Stav
+                  label: Prevádzka
                   selector:
                     select:
                       mode: list
                       options:
-                        - label: Zapnutá
+                        - label: Vysiela sa
                           value: active
-                        - label: Vypnutá
+                        - label: Mimo vysielania
                           value: disabled
 
                 day_mode:
-                  label: Dni
+                  label: Vysielacie dni
                   required: true
                   selector:
                     select:
@@ -90,7 +91,7 @@ blueprint:
                           value: sun
 
                 condition_rule:
-                  label: Podmienka
+                  label: Podmienka vysielania
                   selector:
                     choose:
                       choices:
@@ -189,14 +190,14 @@ blueprint:
                                     text: {}
 
                 sound:
-                  label: Zvuk
+                  label: Zvuk znamenia
                   selector:
                     media:
                       accept:
                         - audio/*
 
                 media_players:
-                  label: Prehrať na
+                  label: Prijímače
                   selector:
                     entity:
                       multiple: true
@@ -215,7 +216,7 @@ blueprint:
                       mode: slider
 
                 repeat_count:
-                  label: Počet prehratí
+                  label: Počet opakovaní
                   selector:
                     number:
                       min: 0
@@ -224,7 +225,7 @@ blueprint:
                       mode: box
 
                 pause_between:
-                  label: Pauza
+                  label: Prestávka
                   selector:
                     duration:
                       enable_day: false
@@ -232,25 +233,25 @@ blueprint:
                       enable_millisecond: false
 
                 notify_target:
-                  label: Notifikácia na
+                  label: Oznámenie na
                   selector:
                     target:
                       entity:
                         - domain: notify
 
                 notify_title:
-                  label: Nadpis
+                  label: Nadpis hlásenia
                   selector:
                     text: {}
 
                 notify_message:
-                  label: Správa
+                  label: Text hlásenia
                   selector:
                     text:
                       multiline: true
 
                 aas_event:
-                  label: AAS signál
+                  label: Svetelné znamenie
                   selector:
                     select:
                       mode: dropdown
@@ -277,18 +278,18 @@ blueprint:
                           value: pripomienka
 
                 aas_scope:
-                  label: AAS cieľ
+                  label: Kam vyslať svetelný signál
                   selector:
                     select:
                       mode: list
                       options:
-                        - label: Všetky zariadenia
+                        - label: Všetky prijímače
                           value: all
-                        - label: Vybrané zariadenia
+                        - label: Vybrané prijímače
                           value: selected
 
                 aas_nodes:
-                  label: AAS zariadenia
+                  label: Vybrané prijímače
                   selector:
                     select:
                       multiple: true
@@ -302,18 +303,18 @@ blueprint:
                           value: esphome-117-aura
 
                 custom_actions:
-                  label: Ďalšie akcie
+                  label: Doplnkový program
                   selector:
                     action: {}
 
     calendar_section:
-      name: Kalendár
+      name: Vysielací kalendár
       icon: mdi:calendar-edit
       collapsed: true
-      description: Po–Pi sa počíta ako pracovný deň. Tu nastavíš sviatky a pracovné soboty.
+      description: Po–Pi sú pracovné dni. Tu upravíš sviatky a pracovné soboty.
       input:
         date_overrides:
-          name: Výnimky
+          name: Výnimky v kalendári
           default: []
           selector:
             object:
@@ -327,7 +328,7 @@ blueprint:
                   selector:
                     date: {}
                 mode:
-                  label: Typ dňa
+                  label: Režim dňa
                   required: true
                   selector:
                     select:
@@ -339,13 +340,13 @@ blueprint:
                           value: weekend
 
     defaults_section:
-      name: Predvolené nastavenia
+      name: Predvolený program
       icon: mdi:tune-variant
       collapsed: true
-      description: Použijú sa, ak ich konkrétna udalosť nemá nastavené.
+      description: Použije sa, ak konkrétne znamenie nemá vlastné nastavenie.
       input:
         default_media_players:
-          name: Prehrať na
+          name: Prijímače
           default: []
           selector:
             entity:
@@ -355,7 +356,7 @@ blueprint:
                 - domain: media_player
 
         default_sound:
-          name: Zvuk
+          name: Zvuk znamenia
           default: {}
           selector:
             media:
@@ -374,7 +375,7 @@ blueprint:
               mode: slider
 
         default_repeat_count:
-          name: Počet prehratí
+          name: Počet opakovaní
           default: 1
           selector:
             number:
@@ -384,7 +385,7 @@ blueprint:
               mode: box
 
         default_pause_between:
-          name: Pauza
+          name: Prestávka
           default:
             hours: 0
             minutes: 0
@@ -396,7 +397,7 @@ blueprint:
               enable_millisecond: false
 
         default_notify_target:
-          name: Notifikácia na
+          name: Oznámenie na
           default: {}
           selector:
             target:
@@ -404,7 +405,7 @@ blueprint:
                 - domain: notify
 
         default_notify_title:
-          name: Nadpis
+          name: Nadpis hlásenia
           default: ""
           selector:
             text: {}
@@ -455,12 +456,12 @@ conditions:
     value_template: "{{ matched_events | count > 0 }}"
 
 actions:
-  - alias: Spracuj aktuálne udalosti
+  - alias: Vyhlás znamenia pre aktuálnu minútu
     repeat:
       for_each: "{{ matched_events }}"
       sequence:
         - variables:
-            event_name: "{{ repeat.item.get('name', 'Časový signál') }}"
+            event_name: "{{ repeat.item.get('name', 'Časové znamenie') }}"
             event_time: "{{ (repeat.item.get('time', '') | string)[:5] }}"
             event_day_mode: "{{ repeat.item.get('day_mode', 'all') }}"
             event_weekdays: "{{ repeat.item.get('weekdays', []) or [] }}"
@@ -482,7 +483,7 @@ actions:
             event_notify_title: >-
               {{ repeat.item.get('notify_title') or global_notify_title }}
             event_notify_message: >-
-              {{ repeat.item.get('notify_message') or repeat.item.get('name', 'Časový signál') }}
+              {{ repeat.item.get('notify_message') or repeat.item.get('name', 'Časové znamenie') }}
 
             event_aas_event: "{{ repeat.item.get('aas_event', 'none') or 'none' }}"
             event_aas_scope: "{{ repeat.item.get('aas_scope', 'all') or 'all' }}"
@@ -584,10 +585,10 @@ actions:
                 - condition: template
                   value_template: "{{ event_allowed }}"
               sequence:
-                - alias: Spusti výstupy
+                - alias: Spusti vysielanie
                   parallel:
                     - sequence:
-                        - alias: Zvuk
+                        - alias: Zvukové znamenie
                           choose:
                             - conditions:
                                 - condition: template
@@ -610,7 +611,7 @@ actions:
                                       {% endfor %}
                                       {{ ns.items }}
 
-                                - alias: Nastav hlasitosť
+                                - alias: Nastav vysielaciu hlasitosť
                                   continue_on_error: true
                                   action: media_player.volume_set
                                   target:
@@ -641,11 +642,11 @@ actions:
                                               - delay:
                                                   seconds: "{{ event_pause_seconds }}"
 
-                                - alias: Počkaj na stav prehrávača
+                                - alias: Počkaj na prijímače
                                   delay:
                                     milliseconds: 500
 
-                                - alias: Počkaj na dohratie
+                                - alias: Počkaj na koniec hlásenia
                                   wait_template: >-
                                     {% set ns = namespace(done=true) %}
                                     {% for player in event_media_players %}
@@ -658,7 +659,7 @@ actions:
                                     seconds: 60
                                   continue_on_timeout: true
 
-                                - alias: Obnov hlasitosť
+                                - alias: Obnov pôvodnú hlasitosť
                                   repeat:
                                     for_each: "{{ original_volumes }}"
                                     sequence:
@@ -675,7 +676,7 @@ actions:
                                                   volume_level: "{{ repeat.item.volume }}"
 
                     - sequence:
-                        - alias: AAS signál
+                        - alias: Svetelné znamenie
                           choose:
                             - conditions:
                                 - condition: template
@@ -711,7 +712,7 @@ actions:
                                           retain: false
 
                     - sequence:
-                        - alias: Notifikácia
+                        - alias: Textové oznámenie
                           choose:
                             - conditions:
                                 - condition: template
@@ -725,7 +726,7 @@ actions:
                                     message: "{{ event_notify_message }}"
 
                     - sequence:
-                        - alias: Ďalšie akcie
+                        - alias: Doplnkový program
                           repeat:
                             for_each: "{{ event_custom_actions }}"
                             sequence:
