@@ -39,9 +39,9 @@ Podporuje rezimy:
 - podporuje nocny rezim s vlastnym casom od-do
 - mobilne notifikacie su volitelne
 
-## Casove signaly - autonomny multi-event chime & notifier (BETA)
+## Plánovač upozornení (BETA)
 
-`casove_signaly_multi_event.yaml` je samostatna blueprint automatizacia s lubovolnym poctom casovych udalosti.
+`casove_signaly_multi_event.yaml` je samostatná blueprint automatizácia s ľubovoľným počtom časových udalostí.
 Nevyzaduje pomocne skripty ani helpery.
 
 Kazda udalost sa nastavuje cez moderny `object` selector s `multiple: true`.
