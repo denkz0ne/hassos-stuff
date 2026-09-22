@@ -42,7 +42,7 @@ Podporuje rezimy:
 ## Casove signaly - autonomny multi-event chime & notifier (BETA)
 
 `casove_signaly_multi_event.yaml` je samostatna blueprint automatizacia s lubovolnym poctom casovych udalosti.
-Nevyzaduje externe skripty ani helpery.
+Nevyzaduje pomocne skripty ani helpery.
 
 Kazda udalost sa nastavuje cez moderny `object` selector s `multiple: true`.
 
@@ -51,17 +51,54 @@ Podporuje:
 - lubovolny pocet casov v jednej instancii blueprintu
 - kazdy den / pracovne dni Po-Pi / vikend So-Ne / vlastne dni
 - interne datumove vynimky pre sviatok alebo pracovnu sobotu
-- volitelnu podmienku podla stavu lubovolnej entity
+- typovu volitelnu podmienku:
+  - Boolean -> true/false
+  - Cislo -> <, <=, =, !=, >=, >
+  - Text/stav -> =, !=, obsahuje, neobsahuje, zacina, konci
 - media picker pre zvuk
-- Target selector pre media player, notify a svetelne ciele
+- jeden alebo viac `media_player`
+- per-event hlasitost 0-100 % s automatickym obnovenim povodnej hlasitosti kazdeho playera
 - pocet prehrati 0-20
-- pauzu medzi prehratiami
+- pauzu cez HA duration picker `hh:mm:ss`
 - moderne `notify.send_message`
-- svetla: short flash, long flash, on, off, toggle
+- AAS vizualne eventy cez MQTT
+- AAS broadcast na vsetky nody alebo cielenie iba na vybrane ESP
 - Vlastne HA akcie priamo cez Action selector v kazdej udalosti
-- globalne defaulty, ktore moze konkretna udalost prepisat
+- globalne audio/notify defaulty
 - viac udalosti v rovnakej minute
-- paralelne vetvy pre zvuk, svetlo, notify a vlastne akcie
+- paralelne vetvy pre audio, AAS, notify a vlastne akcie
+
+### AAS vizualna signalizacia
+
+Blueprint pouziva semanticke AAS eventy:
+
+`ping`, `pohyb`, `zvoncek`, `sprava`, `upozornenie`, `chyba`, `uspech`, `informacia`, `pripomienka`.
+
+Pri volbe `Na vsetkych AAS zariadeniach` publikuje:
+
+```text
+aas/udalost
+```
+
+Pri volbe `Iba na vybranych ESP` publikuje na:
+
+```text
+aas/udalost/<node_id>
+```
+
+Aktualne podporovane node ID:
+
+- `esp-87-bulb`
+- `esp-85-vindriktning`
+- `esphome-117-aura`
+
+Cielenie vyzaduje AAS firmware s podporou per-node topicov.
+
+### Audio a hlasitost
+
+Pred prehratim sa ulozi aktualny `volume_level` kazdeho zvoleneho media playera.
+Blueprint nastavi hlasitost udalosti, prehra zvuk(y), pocka na ukoncenie posledneho prehravania
+(maximalne 60 s) a nasledne kazdemu playeru obnovi jeho vlastnu povodnu hlasitost.
 
 ### Pracovne dni bez Workday helpera
 
@@ -75,37 +112,24 @@ V sekcii `Kalendar bez helperov` mozes pridat datumove vynimky:
 - sviatok cez pracovny tyzden -> `Vikend / volno`
 - pracovna sobota -> `Pracovny den`
 
-Takto nie je blueprint zavisly od Workday integracie.
-
 ### Vlastne HA akcie
 
-Kazda udalost ma priamo pole `Vlastne HA akcie` s natívnym Home Assistant Action selectorom.
-Pouziva rovnaky editor akcii ako bezna automatizacia.
+Kazda udalost ma pole `Vlastne HA akcie` s natívnym Home Assistant Action selectorom.
 
-V BETA verzii runtime interpreter podporuje:
+BETA runtime interpreter podporuje:
 
-- bezne integračne/service actions s `action`, `target` a `data`
+- bezne action/service kroky s `action`, `target` a `data`
 - action bez targetu alebo bez data
 - `delay`
 - aktivaciu `scene`
 
-Typicky sem mozes dat napr.:
-
-- ESPHome vlastnu akciu
-- efekt konkretnej ziarovky
-- mobilnu notifikaciu cez legacy `notify.mobile_app_...`
-- MQTT publish
-- zapnutie/vypnutie/prepnutie entity
-- ovladanie cover, climate, media playera
-- aktivaciu sceny
-
-Vnorene flow-control bloky vytvorene v Action editore, napr. `choose`, `if`, `repeat`, `parallel`, zatial BETA interpreter nevykonava. Na bezne HA actions to nema vplyv.
+Vnorene `choose`, `if`, `repeat` a `parallel` zatial interpreter nevykonava.
 
 ### BETA obmedzenia
 
 - casovac ma minutove rozlisenie; sekundy z time pickera sa ignoruju
-- `pause = 0` znamena okamzity dalsi `play_media`; niektore prehravace mozu predosly zvuk prerusit
-- natívny `flash` zavisi od podpory konkretneho svetla; specificky ESPHome efekt nastav cez `Vlastne HA akcie`
+- `pause = 00:00:00` znamena okamzity dalsi `play_media`
+- obnovenie hlasitosti caka na stav playera `playing/buffering`; pri playeri, ktory stav nehlasi spolahlivo, je fallback timeout 60 s
 
 ## Import
 
