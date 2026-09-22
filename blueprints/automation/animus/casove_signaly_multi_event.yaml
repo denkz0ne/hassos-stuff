@@ -1,0 +1,597 @@
+blueprint:
+  name: "Časové signály - multi-event chime & notifier (BETA)"
+  description: |
+    Jedna automatizácia, ľubovoľný počet časových udalostí.
+
+    Každá udalosť môže mať vlastný čas, pravidlo dní, zvuk, počet opakovaní,
+    pauzu, notify ciele, svetelnú signalizáciu a voliteľné vlastné skripty.
+
+    BETA poznámky:
+    - plánovanie má minútové rozlíšenie; sekundy z time pickera sa ignorujú
+    - pri pauze 0 s sa opakované play_media požiadavky odošlú bez čakania
+    - pre úplne ľubovoľnú vlastnú HA sekvenciu použi per-event Extra script
+  domain: automation
+  author: denkz0ne
+  homeassistant:
+    min_version: 2026.9.0
+
+  input:
+    events_section:
+      name: Časové udalosti
+      icon: mdi:calendar-clock
+      description: |
+        Pridaj ľubovoľný počet udalostí. Povinné sú iba názov, čas a pravidlo dní.
+        Ostatné polia môžu zostať prázdne a použijú globálne predvolené hodnoty.
+      input:
+        events:
+          name: Udalosti
+          description: Každý záznam je jeden samostatný časový signál.
+          default: []
+          selector:
+            object:
+              multiple: true
+              label_field: name
+              description_field: time
+              fields:
+                name:
+                  label: Názov
+                  required: true
+                  selector:
+                    text: {}
+
+                time:
+                  label: Čas
+                  required: true
+                  selector:
+                    time: {}
+
+                state:
+                  label: Stav udalosti (prázdne = aktívna)
+                  selector:
+                    select:
+                      mode: dropdown
+                      options:
+                        - label: Aktívna
+                          value: active
+                        - label: Vypnutá
+                          value: disabled
+
+                day_mode:
+                  label: Kedy platí
+                  required: true
+                  selector:
+                    select:
+                      mode: dropdown
+                      options:
+                        - label: Každý deň
+                          value: all
+                        - label: Iba pracovný deň
+                          value: workday
+                        - label: Iba voľno / nepracovný deň
+                          value: non_workday
+                        - label: Iba víkend (So + Ne)
+                          value: weekend
+                        - label: Vlastné dni
+                          value: custom
+
+                weekdays:
+                  label: Vlastné dni (iba pri režime Vlastné dni)
+                  selector:
+                    select:
+                      multiple: true
+                      mode: dropdown
+                      options:
+                        - label: Pondelok
+                          value: mon
+                        - label: Utorok
+                          value: tue
+                        - label: Streda
+                          value: wed
+                        - label: Štvrtok
+                          value: thu
+                        - label: Piatok
+                          value: fri
+                        - label: Sobota
+                          value: sat
+                        - label: Nedeľa
+                          value: sun
+
+                guard_entity:
+                  label: Spustiť iba ak je tento prepínač / binary sensor...
+                  selector:
+                    entity:
+                      filter:
+                        - domain: input_boolean
+                        - domain: binary_sensor
+
+                guard_state:
+                  label: ...v tomto stave (prázdne = on)
+                  selector:
+                    select:
+                      mode: dropdown
+                      options:
+                        - label: Zapnuté / on
+                          value: "on"
+                        - label: Vypnuté / off
+                          value: "off"
+
+                sound:
+                  label: Zvuk (prázdne = globálny)
+                  selector:
+                    media:
+                      accept:
+                        - audio/*
+
+                media_players:
+                  label: Media playery (prázdne = globálne)
+                  selector:
+                    entity:
+                      multiple: true
+                      reorder: true
+                      filter:
+                        - domain: media_player
+
+                repeat_count:
+                  label: Počet prehratí (0 = bez zvuku)
+                  selector:
+                    number:
+                      min: 0
+                      max: 20
+                      step: 1
+                      mode: box
+
+                pause_seconds:
+                  label: Pauza medzi prehratiami v sekundách
+                  selector:
+                    number:
+                      min: 0
+                      max: 60
+                      step: 0.5
+                      unit_of_measurement: s
+                      mode: box
+
+                notify_targets:
+                  label: Notify entity ciele (prázdne = globálne)
+                  selector:
+                    entity:
+                      multiple: true
+                      reorder: true
+                      filter:
+                        - domain: notify
+
+                notify_title:
+                  label: Nadpis notifikácie
+                  selector:
+                    text: {}
+
+                notify_message:
+                  label: Text notifikácie (prázdne = názov udalosti)
+                  selector:
+                    text:
+                      multiline: true
+
+                legacy_notify_service:
+                  label: Legacy notify služba, napr. notify.mobile_app_telefon
+                  selector:
+                    text: {}
+
+                visual_lights:
+                  label: Svetlá pre vizuálny signál (prázdne = globálne)
+                  selector:
+                    entity:
+                      multiple: true
+                      reorder: true
+                      filter:
+                        - domain: light
+
+                visual_style:
+                  label: Svetelná akcia
+                  selector:
+                    select:
+                      mode: dropdown
+                      options:
+                        - label: Bez natívnej svetelnej akcie
+                          value: none
+                        - label: Krátky flash
+                          value: flash_short
+                        - label: Dlhý flash
+                          value: flash_long
+                        - label: Zapnúť
+                          value: turn_on
+                        - label: Vypnúť
+                          value: turn_off
+                        - label: Prepnúť
+                          value: toggle
+
+                visual_script:
+                  label: Vizuálny / ESP notifier script
+                  selector:
+                    entity:
+                      filter:
+                        - domain: script
+
+                extra_script:
+                  label: Extra script - ľubovoľná vlastná HA akcia
+                  selector:
+                    entity:
+                      filter:
+                        - domain: script
+
+    calendar_section:
+      name: Pracovné dni
+      icon: mdi:calendar-check
+      collapsed: true
+      description: |
+        Ak používaš režim Pracovný deň alebo Nepracovný deň, vyber Workday binary_sensor.
+        Bez neho blueprint použije fallback Po-Pi / So-Ne a nebude poznať sviatky.
+      input:
+        workday_sensor:
+          name: Workday senzor
+          default: ""
+          selector:
+            entity:
+              filter:
+                - domain: binary_sensor
+
+    defaults_section:
+      name: Predvolené výstupy
+      icon: mdi:tune-variant
+      collapsed: true
+      description: |
+        Tieto hodnoty sa použijú, keď ich konkrétna udalosť nemá nastavené.
+        Tak nemusíš pri každom čase znova vyklikávať tie isté zariadenia.
+      input:
+        default_media_players:
+          name: Predvolené media playery
+          default: []
+          selector:
+            entity:
+              multiple: true
+              reorder: true
+              filter:
+                - domain: media_player
+
+        default_sound:
+          name: Predvolený zvuk
+          default: {}
+          selector:
+            media:
+              accept:
+                - audio/*
+
+        default_repeat_count:
+          name: Predvolený počet prehratí
+          default: 1
+          selector:
+            number:
+              min: 0
+              max: 20
+              step: 1
+              mode: box
+
+        default_pause_seconds:
+          name: Predvolená pauza medzi prehratiami
+          default: 0
+          selector:
+            number:
+              min: 0
+              max: 60
+              step: 0.5
+              unit_of_measurement: s
+              mode: box
+
+        default_notify_targets:
+          name: Predvolené notify entity
+          default: []
+          selector:
+            entity:
+              multiple: true
+              reorder: true
+              filter:
+                - domain: notify
+
+        default_legacy_notify_service:
+          name: Predvolená legacy notify služba
+          description: Napríklad notify.mobile_app_mato. Nechaj prázdne, ak používaš notify entity vyššie.
+          default: ""
+          selector:
+            text: {}
+
+        default_notify_title:
+          name: Predvolený nadpis notifikácie
+          default: ""
+          selector:
+            text: {}
+
+        default_visual_lights:
+          name: Predvolené svetlá
+          default: []
+          selector:
+            entity:
+              multiple: true
+              reorder: true
+              filter:
+                - domain: light
+
+        default_visual_style:
+          name: Predvolená svetelná akcia
+          default: none
+          selector:
+            select:
+              mode: dropdown
+              options:
+                - label: Bez natívnej svetelnej akcie
+                  value: none
+                - label: Krátky flash
+                  value: flash_short
+                - label: Dlhý flash
+                  value: flash_long
+                - label: Zapnúť
+                  value: turn_on
+                - label: Vypnúť
+                  value: turn_off
+                - label: Prepnúť
+                  value: toggle
+
+variables:
+  schedule_events: !input events
+  workday_sensor_entity: !input workday_sensor
+
+  global_media_players: !input default_media_players
+  global_sound: !input default_sound
+  global_repeat_count: !input default_repeat_count
+  global_pause_seconds: !input default_pause_seconds
+
+  global_notify_targets: !input default_notify_targets
+  global_legacy_notify_service: !input default_legacy_notify_service
+  global_notify_title: !input default_notify_title
+
+  global_visual_lights: !input default_visual_lights
+  global_visual_style: !input default_visual_style
+
+  current_hm: "{{ now().strftime('%H:%M') }}"
+  current_weekday: "{{ ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'][now().weekday()] }}"
+
+  matched_events: >-
+    {% set ns = namespace(items=[]) %}
+    {% for item in schedule_events %}
+      {% set item_time = (item.get('time', '') | string) %}
+      {% set item_state = item.get('state', 'active') or 'active' %}
+      {% if item_time[:5] == current_hm and item_state != 'disabled' %}
+        {% set ns.items = ns.items + [item] %}
+      {% endif %}
+    {% endfor %}
+    {{ ns.items }}
+
+triggers:
+  - trigger: time_pattern
+    minutes: "*"
+
+conditions:
+  - condition: template
+    value_template: "{{ matched_events | count > 0 }}"
+
+actions:
+  - alias: Spracuj všetky udalosti naplánované na túto minútu
+    repeat:
+      for_each: "{{ matched_events }}"
+      sequence:
+        - variables:
+            event_name: "{{ repeat.item.get('name', 'Časový signál') }}"
+            event_time: "{{ (repeat.item.get('time', '') | string)[:5] }}"
+            event_day_mode: "{{ repeat.item.get('day_mode', 'all') }}"
+            event_weekdays: "{{ repeat.item.get('weekdays', []) or [] }}"
+            event_guard_entity: "{{ repeat.item.get('guard_entity', '') or '' }}"
+            event_guard_state: "{{ repeat.item.get('guard_state', 'on') or 'on' }}"
+
+            event_sound: >-
+              {{ repeat.item.get('sound') if repeat.item.get('sound') else global_sound }}
+            event_media_players: >-
+              {{ repeat.item.get('media_players', []) or global_media_players }}
+            event_repeat_count: >-
+              {{ repeat.item.get('repeat_count', global_repeat_count) | int(1) }}
+            event_pause_seconds: >-
+              {{ repeat.item.get('pause_seconds', global_pause_seconds) | float(0) }}
+
+            event_notify_targets: >-
+              {{ repeat.item.get('notify_targets', []) or global_notify_targets }}
+            event_notify_title: >-
+              {{ repeat.item.get('notify_title') or global_notify_title }}
+            event_notify_message: >-
+              {{ repeat.item.get('notify_message') or repeat.item.get('name', 'Časový signál') }}
+            event_legacy_notify_service: >-
+              {{ repeat.item.get('legacy_notify_service') or global_legacy_notify_service }}
+
+            event_visual_lights: >-
+              {{ repeat.item.get('visual_lights', []) or global_visual_lights }}
+            event_visual_style: >-
+              {{ repeat.item.get('visual_style') or global_visual_style }}
+            event_visual_script: "{{ repeat.item.get('visual_script', '') or '' }}"
+            event_extra_script: "{{ repeat.item.get('extra_script', '') or '' }}"
+
+        - variables:
+            event_allowed_today: >-
+              {% set mode = event_day_mode %}
+              {% set fallback_workday = now().weekday() < 5 %}
+              {% set wd_state = states(workday_sensor_entity) if workday_sensor_entity else 'unknown' %}
+              {% set real_workday = (wd_state == 'on') if wd_state in ['on', 'off'] else fallback_workday %}
+
+              {% if mode == 'all' %}
+                {% set day_ok = true %}
+              {% elif mode == 'workday' %}
+                {% set day_ok = real_workday %}
+              {% elif mode == 'non_workday' %}
+                {% set day_ok = not real_workday %}
+              {% elif mode == 'weekend' %}
+                {% set day_ok = current_weekday in ['sat', 'sun'] %}
+              {% elif mode == 'custom' %}
+                {% set day_ok = current_weekday in event_weekdays %}
+              {% else %}
+                {% set day_ok = true %}
+              {% endif %}
+
+              {% set guard_ok = true if not event_guard_entity else is_state(event_guard_entity, event_guard_state) %}
+              {{ day_ok and guard_ok }}
+
+        - choose:
+            - conditions:
+                - condition: template
+                  value_template: "{{ event_allowed_today }}"
+              sequence:
+                - alias: Zvuk, svetlo, notifikácie a vlastné akcie bežia paralelne
+                  parallel:
+                    - sequence:
+                        - alias: Audio vetva
+                          choose:
+                            - conditions:
+                                - condition: template
+                                  value_template: >-
+                                    {{
+                                      event_repeat_count > 0
+                                      and (event_media_players | count) > 0
+                                      and event_sound is mapping
+                                      and event_sound.get('media_content_id', '') != ''
+                                    }}
+                              sequence:
+                                - repeat:
+                                    count: "{{ event_repeat_count }}"
+                                    sequence:
+                                      - alias: Prehraj zvuk
+                                        continue_on_error: true
+                                        action: media_player.play_media
+                                        target:
+                                          entity_id: "{{ event_media_players }}"
+                                        data:
+                                          media_content_id: "{{ event_sound.get('media_content_id') }}"
+                                          media_content_type: "{{ event_sound.get('media_content_type', 'music') }}"
+
+                                      - choose:
+                                          - conditions:
+                                              - condition: template
+                                                value_template: >-
+                                                  {{
+                                                    repeat.index < event_repeat_count
+                                                    and event_pause_seconds > 0
+                                                  }}
+                                            sequence:
+                                              - delay:
+                                                  seconds: "{{ event_pause_seconds }}"
+
+                    - sequence:
+                        - alias: Natívna svetelná vetva
+                          choose:
+                            - conditions:
+                                - condition: template
+                                  value_template: >-
+                                    {{
+                                      (event_visual_lights | count) > 0
+                                      and event_visual_style in ['flash_short', 'flash_long']
+                                    }}
+                              sequence:
+                                - continue_on_error: true
+                                  action: light.turn_on
+                                  target:
+                                    entity_id: "{{ event_visual_lights }}"
+                                  data:
+                                    flash: "{{ 'short' if event_visual_style == 'flash_short' else 'long' }}"
+
+                            - conditions:
+                                - condition: template
+                                  value_template: >-
+                                    {{ (event_visual_lights | count) > 0 and event_visual_style == 'turn_on' }}
+                              sequence:
+                                - continue_on_error: true
+                                  action: light.turn_on
+                                  target:
+                                    entity_id: "{{ event_visual_lights }}"
+
+                            - conditions:
+                                - condition: template
+                                  value_template: >-
+                                    {{ (event_visual_lights | count) > 0 and event_visual_style == 'turn_off' }}
+                              sequence:
+                                - continue_on_error: true
+                                  action: light.turn_off
+                                  target:
+                                    entity_id: "{{ event_visual_lights }}"
+
+                            - conditions:
+                                - condition: template
+                                  value_template: >-
+                                    {{ (event_visual_lights | count) > 0 and event_visual_style == 'toggle' }}
+                              sequence:
+                                - continue_on_error: true
+                                  action: light.toggle
+                                  target:
+                                    entity_id: "{{ event_visual_lights }}"
+
+                        - alias: Vizuálny / ESP script
+                          choose:
+                            - conditions:
+                                - condition: template
+                                  value_template: "{{ event_visual_script | length > 0 }}"
+                              sequence:
+                                - continue_on_error: true
+                                  action: script.turn_on
+                                  target:
+                                    entity_id: "{{ event_visual_script }}"
+                                  data:
+                                    variables:
+                                      event_name: "{{ event_name }}"
+                                      event_time: "{{ event_time }}"
+                                      title: "{{ event_notify_title }}"
+                                      message: "{{ event_notify_message }}"
+                                      day_mode: "{{ event_day_mode }}"
+
+                    - sequence:
+                        - alias: Moderné notify entity
+                          choose:
+                            - conditions:
+                                - condition: template
+                                  value_template: "{{ (event_notify_targets | count) > 0 }}"
+                              sequence:
+                                - continue_on_error: true
+                                  action: notify.send_message
+                                  target:
+                                    entity_id: "{{ event_notify_targets }}"
+                                  data:
+                                    title: "{{ event_notify_title }}"
+                                    message: "{{ event_notify_message }}"
+
+                        - alias: Legacy notify service
+                          choose:
+                            - conditions:
+                                - condition: template
+                                  value_template: "{{ event_legacy_notify_service | length > 0 }}"
+                              sequence:
+                                - continue_on_error: true
+                                  action: "{{ event_legacy_notify_service }}"
+                                  data:
+                                    title: "{{ event_notify_title }}"
+                                    message: "{{ event_notify_message }}"
+
+                    - sequence:
+                        - alias: Extra script - vlastná ľubovoľná HA logika
+                          choose:
+                            - conditions:
+                                - condition: template
+                                  value_template: "{{ event_extra_script | length > 0 }}"
+                              sequence:
+                                - continue_on_error: true
+                                  action: script.turn_on
+                                  target:
+                                    entity_id: "{{ event_extra_script }}"
+                                  data:
+                                    variables:
+                                      event_name: "{{ event_name }}"
+                                      event_time: "{{ event_time }}"
+                                      title: "{{ event_notify_title }}"
+                                      message: "{{ event_notify_message }}"
+                                      day_mode: "{{ event_day_mode }}"
+                                      is_workday: >-
+                                        {% set wd_state = states(workday_sensor_entity) if workday_sensor_entity else 'unknown' %}
+                                        {{ (wd_state == 'on') if wd_state in ['on', 'off'] else (now().weekday() < 5) }}
+
+mode: parallel
+max: 20
+max_exceeded: silent
