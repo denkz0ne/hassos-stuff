@@ -39,60 +39,73 @@ Podporuje rezimy:
 - podporuje nocny rezim s vlastnym casom od-do
 - mobilne notifikacie su volitelne
 
-## Casove signaly - multi-event chime & notifier (BETA)
+## Casove signaly - autonomny multi-event chime & notifier (BETA)
 
-`casove_signaly_multi_event.yaml` je jedna automatizacia s lubovolnym poctom casovych udalosti.
+`casove_signaly_multi_event.yaml` je samostatna blueprint automatizacia s lubovolnym poctom casovych udalosti.
+Nevyzaduje externe skripty ani helpery.
 
-Kazda udalost ma vlastny formular cez moderny `object` selector s `multiple: true`.
+Kazda udalost sa nastavuje cez moderny `object` selector s `multiple: true`.
 
 Podporuje:
 
 - lubovolny pocet casov v jednej instancii blueprintu
-- kazdy den / Workday / non-Workday / vikend / vlastne dni
-- volitelny per-event `input_boolean` alebo `binary_sensor` guard
+- kazdy den / pracovne dni Po-Pi / vikend So-Ne / vlastne dni
+- interne datumove vynimky pre sviatok alebo pracovnu sobotu
+- volitelnu podmienku podla stavu lubovolnej entity
 - media picker pre zvuk
-- jeden alebo viac `media_player`
+- Target selector pre media player, notify a svetelne ciele
 - pocet prehrati 0-20
 - pauzu medzi prehratiami
-- moderne `notify` entity cez `notify.send_message`
-- legacy notify sluzby, napr. `notify.mobile_app_telefon`
+- moderne `notify.send_message`
 - svetla: short flash, long flash, on, off, toggle
-- samostatny Visual/ESP script
-- samostatny Extra script pre lubovolnu vlastnu Home Assistant logiku
-- globalne defaulty, ktore moze jednotliva udalost prepisat
+- Vlastne HA akcie priamo cez Action selector v kazdej udalosti
+- globalne defaulty, ktore moze konkretna udalost prepisat
 - viac udalosti v rovnakej minute
+- paralelne vetvy pre zvuk, svetlo, notify a vlastne akcie
 
-### Workday
+### Pracovne dni bez Workday helpera
 
-Ak vyberies Workday `binary_sensor`, rezimy pracovny/nepracovny den respektuju jeho stav a teda aj sviatky podla konfiguracie Workday integracie.
-
-Ak Workday senzor nevyberies, blueprint pouzije fallback:
+Blueprint pocita bezny rezim autonomne:
 
 - Po-Pi = pracovny den
-- So-Ne = nepracovny den
+- So-Ne = vikend / volno
 
-Rezim `Vikend` je vzdy striktne Sobota + Nedela.
+V sekcii `Kalendar bez helperov` mozes pridat datumove vynimky:
 
-### Extra a Visual script
+- sviatok cez pracovny tyzden -> `Vikend / volno`
+- pracovna sobota -> `Pracovny den`
 
-Per-event script je univerzalny escape hatch pre cokolvek, co nema zmysel natvrdo zabudovat do blueprintu.
-Blueprint ho spusta cez `script.turn_on` a odovzda mu premenne:
+Takto nie je blueprint zavisly od Workday integracie.
 
-- `event_name`
-- `event_time`
-- `title`
-- `message`
-- `day_mode`
-- Extra script navyse dostane `is_workday`
+### Vlastne HA akcie
 
-Script nemusi mat tieto polia deklarovane, ale ak ich pridas ako Fields, budu sa pohodlnejsie testovat cez UI.
+Kazda udalost ma priamo pole `Vlastne HA akcie` s natívnym Home Assistant Action selectorom.
+Pouziva rovnaky editor akcii ako bezna automatizacia.
+
+V BETA verzii runtime interpreter podporuje:
+
+- bezne integračne/service actions s `action`, `target` a `data`
+- action bez targetu alebo bez data
+- `delay`
+- aktivaciu `scene`
+
+Typicky sem mozes dat napr.:
+
+- ESPHome vlastnu akciu
+- efekt konkretnej ziarovky
+- mobilnu notifikaciu cez legacy `notify.mobile_app_...`
+- MQTT publish
+- zapnutie/vypnutie/prepnutie entity
+- ovladanie cover, climate, media playera
+- aktivaciu sceny
+
+Vnorene flow-control bloky vytvorene v Action editore, napr. `choose`, `if`, `repeat`, `parallel`, zatial BETA interpreter nevykonava. Na bezne HA actions to nema vplyv.
 
 ### BETA obmedzenia
 
-- casovac ma zatial minutove rozlisenie; sekundy z time pickera sa ignoruju
+- casovac ma minutove rozlisenie; sekundy z time pickera sa ignoruju
 - `pause = 0` znamena okamzity dalsi `play_media`; niektore prehravace mozu predosly zvuk prerusit
-- uplne lubovolna per-event action sequence je riesena cez `script.*`, pretoze dynamicke vykonanie celeho action selectora ulozeneho v jednom object zazname nie je v HA script syntax spolahlivy mechanizmus
-- native `flash` zavisi od podpory konkretneho svetla; pre ESPHome efekty pouzi Visual/ESP script
+- natívny `flash` zavisi od podpory konkretneho svetla; specificky ESPHome efekt nastav cez `Vlastne HA akcie`
 
 ## Import
 
