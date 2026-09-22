@@ -22,7 +22,7 @@ Kontaktovy senzor, zvuky, timer, nocny rezim a mobilne akcie.
 
 ### Casove signaly - autonomny multi-event chime & notifier
 
-Jedna blueprint instancia s lubovolnym poctom casovych udalosti. Kazda moze mat vlastne dni, zvuk a opakovanie, notify, svetelny signal aj vlastne Home Assistant akcie priamo cez Action selector. Bez externych skriptov alebo helperov.
+Jedna blueprint instancia s lubovolnym poctom casovych udalosti. Kazda moze mat vlastne dni, typovu podmienku, zvuk, hlasitost s obnovenim povodnej hodnoty, opakovanie a duration pauzu, notify, AAS MQTT signalizaciu pre vsetky alebo vybrane ESP a vlastne Home Assistant akcie.
 
 Podrobnosti, import a poznamky k beta verzii su v:
 
