@@ -1,19 +1,12 @@
 blueprint:
-  name: "Časové signály - autonómny multi-event chime & notifier (BETA)"
+  name: "Plánovač upozornení"
   description: |
-    Jedna autonómna blueprint automatizácia pre ľubovoľný počet časových udalostí.
+    Naplánuj ľubovoľný počet upozornení v jednej automatizácii.
+    Každé môže mať vlastné dni, podmienku, zvuk, AAS signalizáciu,
+    notifikáciu a ďalšie akcie. Bez helperov a pomocných skriptov.
 
-    Každá udalosť môže mať vlastný čas, dni, inteligentnú podmienku, zvuk,
-    hlasitosť, počet opakovaní, pauzu, AAS vizuálnu signalizáciu,
-    notify entity a vlastné Home Assistant akcie.
-
-    Nevyžaduje externé helpery ani pomocné skripty.
-
-    BETA:
-    - plánovanie má minútové rozlíšenie
-    - vlastné HA akcie podporujú bežné action/service kroky, delay a scene
-    - vnorené flow-control kroky (choose/repeat/parallel/if) vo vlastných akciách
-      zatiaľ nie sú interpretované
+    Beta: čas sa vyhodnocuje po minútach. Vnorené bloky choose, repeat,
+    parallel a if v poli Ďalšie akcie zatiaľ nie sú podporované.
   domain: automation
   author: denkz0ne
   homeassistant:
@@ -21,15 +14,13 @@ blueprint:
 
   input:
     events_section:
-      name: Časové udalosti
+      name: Udalosti
       icon: mdi:calendar-clock
-      description: |
-        Pridaj ľubovoľný počet udalostí. Každá položka je samostatný časový signál.
-        Prázdne výstupy sa jednoducho preskočia.
+      description: Nastav časy a čo sa má pri každom z nich vykonať.
       input:
         events:
-          name: Udalosti
-          description: Pridaj, premenuj a nastav si toľko časov, koľko potrebuješ.
+          name: Časové udalosti
+          description: Každý záznam je jedno samostatné upozornenie.
           default: []
           selector:
             object:
@@ -50,18 +41,18 @@ blueprint:
                     time: {}
 
                 state:
-                  label: Stav udalosti
+                  label: Stav
                   selector:
                     select:
                       mode: list
                       options:
-                        - label: Aktívna
+                        - label: Zapnutá
                           value: active
                         - label: Vypnutá
                           value: disabled
 
                 day_mode:
-                  label: Platnosť
+                  label: Dni
                   required: true
                   selector:
                     select:
@@ -69,15 +60,15 @@ blueprint:
                       options:
                         - label: Každý deň
                           value: all
-                        - label: Pracovné dni (Po-Pi)
+                        - label: Pracovné dni
                           value: workday
-                        - label: Víkend (So-Ne)
+                        - label: Víkend
                           value: weekend
-                        - label: Vlastné dni
+                        - label: Vybrané dni
                           value: custom
 
                 weekdays:
-                  label: Vlastné dni
+                  label: Vybrané dni
                   selector:
                     select:
                       multiple: true
@@ -99,11 +90,11 @@ blueprint:
                           value: sun
 
                 condition_rule:
-                  label: Voliteľná podmienka
+                  label: Podmienka
                   selector:
                     choose:
                       choices:
-                        Boolean:
+                        "Zapnuté / vypnuté":
                           selector:
                             object:
                               fields:
@@ -118,7 +109,7 @@ blueprint:
                                         - domain: switch
                                         - domain: light
                                 value:
-                                  label: Musí byť
+                                  label: Požadovaný stav
                                   required: true
                                   selector:
                                     boolean: {}
@@ -128,7 +119,7 @@ blueprint:
                             object:
                               fields:
                                 entity:
-                                  label: Číselná entita
+                                  label: Entita
                                   required: true
                                   selector:
                                     entity:
@@ -138,23 +129,23 @@ blueprint:
                                         - domain: input_number
                                         - domain: counter
                                 operator:
-                                  label: Porovnanie
+                                  label: Operátor
                                   required: true
                                   selector:
                                     select:
                                       mode: dropdown
                                       options:
-                                        - label: Menšie ako
+                                        - label: "<  menšie než"
                                           value: lt
-                                        - label: Menšie alebo rovné
+                                        - label: "≤  menšie alebo rovné"
                                           value: lte
-                                        - label: Rovné
+                                        - label: "=  rovné"
                                           value: eq
-                                        - label: Nerovné
+                                        - label: "≠  nerovné"
                                           value: neq
-                                        - label: Väčšie alebo rovné
+                                        - label: "≥  väčšie alebo rovné"
                                           value: gte
-                                        - label: Väčšie ako
+                                        - label: ">  väčšie než"
                                           value: gt
                                 value:
                                   label: Hodnota
@@ -173,15 +164,15 @@ blueprint:
                                   selector:
                                     entity: {}
                                 operator:
-                                  label: Porovnanie
+                                  label: Operátor
                                   required: true
                                   selector:
                                     select:
                                       mode: dropdown
                                       options:
-                                        - label: Rovné
+                                        - label: "=  rovné"
                                           value: eq
-                                        - label: Nerovné
+                                        - label: "≠  nerovné"
                                           value: neq
                                         - label: Obsahuje
                                           value: contains
@@ -192,7 +183,7 @@ blueprint:
                                         - label: Končí na
                                           value: ends
                                 value:
-                                  label: Text / stav
+                                  label: Hodnota
                                   required: true
                                   selector:
                                     text: {}
@@ -205,7 +196,7 @@ blueprint:
                         - audio/*
 
                 media_players:
-                  label: Kde prehrať zvuk
+                  label: Prehrať na
                   selector:
                     entity:
                       multiple: true
@@ -214,7 +205,7 @@ blueprint:
                         - domain: media_player
 
                 volume_percent:
-                  label: Hlasitosť zvuku
+                  label: Hlasitosť
                   selector:
                     number:
                       min: 0
@@ -233,7 +224,7 @@ blueprint:
                       mode: box
 
                 pause_between:
-                  label: Pauza medzi prehratiami
+                  label: Pauza
                   selector:
                     duration:
                       enable_day: false
@@ -241,25 +232,25 @@ blueprint:
                       enable_millisecond: false
 
                 notify_target:
-                  label: Kam poslať notifikáciu
+                  label: Notifikácia na
                   selector:
                     target:
                       entity:
                         - domain: notify
 
                 notify_title:
-                  label: Nadpis notifikácie
+                  label: Nadpis
                   selector:
                     text: {}
 
                 notify_message:
-                  label: Text notifikácie
+                  label: Správa
                   selector:
                     text:
                       multiline: true
 
                 aas_event:
-                  label: AAS vizuálna notifikácia
+                  label: AAS signál
                   selector:
                     select:
                       mode: dropdown
@@ -286,18 +277,18 @@ blueprint:
                           value: pripomienka
 
                 aas_scope:
-                  label: Kde prehrať AAS
+                  label: AAS cieľ
                   selector:
                     select:
                       mode: list
                       options:
-                        - label: Na všetkých AAS zariadeniach
+                        - label: Všetky zariadenia
                           value: all
-                        - label: Iba na vybraných ESP
+                        - label: Vybrané zariadenia
                           value: selected
 
                 aas_nodes:
-                  label: Vybrané AAS ESP
+                  label: AAS zariadenia
                   selector:
                     select:
                       multiple: true
@@ -311,20 +302,18 @@ blueprint:
                           value: esphome-117-aura
 
                 custom_actions:
-                  label: Vlastné HA akcie
+                  label: Ďalšie akcie
                   selector:
                     action: {}
 
     calendar_section:
-      name: Kalendár bez helperov
+      name: Kalendár
       icon: mdi:calendar-edit
       collapsed: true
-      description: |
-        Blueprint si pracovné dni počíta sám ako Po-Pi.
-        Tu môžeš pridať výnimky, napr. sviatok uprostred týždňa alebo pracovnú sobotu.
+      description: Po–Pi sa počíta ako pracovný deň. Tu nastavíš sviatky a pracovné soboty.
       input:
         date_overrides:
-          name: Výnimky dátumov
+          name: Výnimky
           default: []
           selector:
             object:
@@ -338,7 +327,7 @@ blueprint:
                   selector:
                     date: {}
                 mode:
-                  label: Správať sa ako
+                  label: Typ dňa
                   required: true
                   selector:
                     select:
@@ -346,19 +335,17 @@ blueprint:
                       options:
                         - label: Pracovný deň
                           value: workday
-                        - label: Víkend / voľno
+                        - label: Voľno
                           value: weekend
 
     defaults_section:
-      name: Predvolené hodnoty
+      name: Predvolené nastavenia
       icon: mdi:tune-variant
       collapsed: true
-      description: |
-        Event môže tieto hodnoty prepísať. Keď ich necháš pri evente prázdne,
-        použijú sa tieto globálne nastavenia.
+      description: Použijú sa, ak ich konkrétna udalosť nemá nastavené.
       input:
         default_media_players:
-          name: Predvolené media playery
+          name: Prehrať na
           default: []
           selector:
             entity:
@@ -368,7 +355,7 @@ blueprint:
                 - domain: media_player
 
         default_sound:
-          name: Predvolený zvuk
+          name: Zvuk
           default: {}
           selector:
             media:
@@ -376,7 +363,7 @@ blueprint:
                 - audio/*
 
         default_volume_percent:
-          name: Predvolená hlasitosť zvuku
+          name: Hlasitosť
           default: 60
           selector:
             number:
@@ -387,7 +374,7 @@ blueprint:
               mode: slider
 
         default_repeat_count:
-          name: Predvolený počet prehratí
+          name: Počet prehratí
           default: 1
           selector:
             number:
@@ -397,7 +384,7 @@ blueprint:
               mode: box
 
         default_pause_between:
-          name: Predvolená pauza medzi prehratiami
+          name: Pauza
           default:
             hours: 0
             minutes: 0
@@ -409,7 +396,7 @@ blueprint:
               enable_millisecond: false
 
         default_notify_target:
-          name: Predvolený cieľ notifikácie
+          name: Notifikácia na
           default: {}
           selector:
             target:
@@ -417,7 +404,7 @@ blueprint:
                 - domain: notify
 
         default_notify_title:
-          name: Predvolený nadpis
+          name: Nadpis
           default: ""
           selector:
             text: {}
@@ -468,7 +455,7 @@ conditions:
     value_template: "{{ matched_events | count > 0 }}"
 
 actions:
-  - alias: Spracuj udalosti naplánované na túto minútu
+  - alias: Spracuj aktuálne udalosti
     repeat:
       for_each: "{{ matched_events }}"
       sequence:
@@ -536,7 +523,7 @@ actions:
                 {% if not entity_id %}
                   {{ false }}
 
-                {% elif choice == 'Boolean' %}
+                {% elif choice == 'Zapnuté / vypnuté' %}
                   {% set wanted = cfg.get('value', true) | bool %}
                   {{ is_state(entity_id, 'on') if wanted else is_state(entity_id, 'off') }}
 
@@ -597,10 +584,10 @@ actions:
                 - condition: template
                   value_template: "{{ event_allowed }}"
               sequence:
-                - alias: Zvuk, AAS, notifikácie a vlastné akcie paralelne
+                - alias: Spusti výstupy
                   parallel:
                     - sequence:
-                        - alias: Audio
+                        - alias: Zvuk
                           choose:
                             - conditions:
                                 - condition: template
@@ -623,7 +610,7 @@ actions:
                                       {% endfor %}
                                       {{ ns.items }}
 
-                                - alias: Nastav dočasnú hlasitosť
+                                - alias: Nastav hlasitosť
                                   continue_on_error: true
                                   action: media_player.volume_set
                                   target:
@@ -654,11 +641,11 @@ actions:
                                               - delay:
                                                   seconds: "{{ event_pause_seconds }}"
 
-                                - alias: Daj prehrávaču chvíľu aktualizovať stav
+                                - alias: Počkaj na stav prehrávača
                                   delay:
                                     milliseconds: 500
 
-                                - alias: Počkaj na dohratie posledného zvuku
+                                - alias: Počkaj na dohratie
                                   wait_template: >-
                                     {% set ns = namespace(done=true) %}
                                     {% for player in event_media_players %}
@@ -671,7 +658,7 @@ actions:
                                     seconds: 60
                                   continue_on_timeout: true
 
-                                - alias: Obnov pôvodnú hlasitosť každého prehrávača
+                                - alias: Obnov hlasitosť
                                   repeat:
                                     for_each: "{{ original_volumes }}"
                                     sequence:
@@ -688,7 +675,7 @@ actions:
                                                   volume_level: "{{ repeat.item.volume }}"
 
                     - sequence:
-                        - alias: AAS vizuálna notifikácia
+                        - alias: AAS signál
                           choose:
                             - conditions:
                                 - condition: template
@@ -724,7 +711,7 @@ actions:
                                           retain: false
 
                     - sequence:
-                        - alias: Notify entity
+                        - alias: Notifikácia
                           choose:
                             - conditions:
                                 - condition: template
@@ -738,7 +725,7 @@ actions:
                                     message: "{{ event_notify_message }}"
 
                     - sequence:
-                        - alias: Vlastné HA akcie z action editora
+                        - alias: Ďalšie akcie
                           repeat:
                             for_each: "{{ event_custom_actions }}"
                             sequence:
