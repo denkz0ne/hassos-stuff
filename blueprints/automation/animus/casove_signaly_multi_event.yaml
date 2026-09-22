@@ -3,9 +3,11 @@ blueprint:
   description: |
     Jedna autonómna blueprint automatizácia pre ľubovoľný počet časových udalostí.
 
-    Každá udalosť môže mať vlastný čas, dni, zvuk, počet opakovaní, pauzu,
-    svetelnú signalizáciu, notify entity a vlastné Home Assistant akcie.
-    Nevyžaduje žiadne externé skripty ani helpery.
+    Každá udalosť môže mať vlastný čas, dni, inteligentnú podmienku, zvuk,
+    hlasitosť, počet opakovaní, pauzu, AAS vizuálnu signalizáciu,
+    notify entity a vlastné Home Assistant akcie.
+
+    Nevyžaduje externé helpery ani pomocné skripty.
 
     BETA:
     - plánovanie má minútové rozlíšenie
@@ -96,16 +98,105 @@ blueprint:
                         - label: Nedeľa
                           value: sun
 
-                guard_entity:
-                  label: Voliteľná podmienka - entita
+                condition_rule:
+                  label: Voliteľná podmienka
                   selector:
-                    entity: {}
+                    choose:
+                      choices:
+                        Boolean:
+                          selector:
+                            object:
+                              fields:
+                                entity:
+                                  label: Entita
+                                  required: true
+                                  selector:
+                                    entity:
+                                      filter:
+                                        - domain: binary_sensor
+                                        - domain: input_boolean
+                                        - domain: switch
+                                        - domain: light
+                                value:
+                                  label: Musí byť
+                                  required: true
+                                  selector:
+                                    boolean: {}
 
-                guard_state:
-                  label: Voliteľná podmienka - požadovaný stav
-                  selector:
-                    text:
-                      prefix: "stav = "
+                        Cislo:
+                          selector:
+                            object:
+                              fields:
+                                entity:
+                                  label: Číselná entita
+                                  required: true
+                                  selector:
+                                    entity:
+                                      filter:
+                                        - domain: sensor
+                                        - domain: number
+                                        - domain: input_number
+                                        - domain: counter
+                                operator:
+                                  label: Porovnanie
+                                  required: true
+                                  selector:
+                                    select:
+                                      mode: dropdown
+                                      options:
+                                        - label: Menšie ako
+                                          value: lt
+                                        - label: Menšie alebo rovné
+                                          value: lte
+                                        - label: Rovné
+                                          value: eq
+                                        - label: Nerovné
+                                          value: neq
+                                        - label: Väčšie alebo rovné
+                                          value: gte
+                                        - label: Väčšie ako
+                                          value: gt
+                                value:
+                                  label: Hodnota
+                                  required: true
+                                  selector:
+                                    number:
+                                      mode: box
+                                      step: 0.01
+
+                        Text:
+                          selector:
+                            object:
+                              fields:
+                                entity:
+                                  label: Entita
+                                  required: true
+                                  selector:
+                                    entity: {}
+                                operator:
+                                  label: Porovnanie
+                                  required: true
+                                  selector:
+                                    select:
+                                      mode: dropdown
+                                      options:
+                                        - label: Rovné
+                                          value: eq
+                                        - label: Nerovné
+                                          value: neq
+                                        - label: Obsahuje
+                                          value: contains
+                                        - label: Neobsahuje
+                                          value: not_contains
+                                        - label: Začína na
+                                          value: starts
+                                        - label: Končí na
+                                          value: ends
+                                value:
+                                  label: Text / stav
+                                  required: true
+                                  selector:
+                                    text: {}
 
                 sound:
                   label: Zvuk
@@ -114,12 +205,24 @@ blueprint:
                       accept:
                         - audio/*
 
-                media_target:
+                media_players:
                   label: Kde prehrať zvuk
                   selector:
-                    target:
-                      entity:
+                    entity:
+                      multiple: true
+                      reorder: true
+                      filter:
                         - domain: media_player
+
+                volume_percent:
+                  label: Hlasitosť zvuku
+                  selector:
+                    number:
+                      min: 0
+                      max: 100
+                      step: 1
+                      unit_of_measurement: "%"
+                      mode: slider
 
                 repeat_count:
                   label: Počet prehratí
@@ -130,15 +233,13 @@ blueprint:
                       step: 1
                       mode: box
 
-                pause_seconds:
+                pause_between:
                   label: Pauza medzi prehratiami
                   selector:
-                    number:
-                      min: 0
-                      max: 120
-                      step: 0.5
-                      unit_of_measurement: s
-                      mode: box
+                    duration:
+                      enable_day: false
+                      enable_second: true
+                      enable_millisecond: false
 
                 notify_target:
                   label: Kam poslať notifikáciu
@@ -158,31 +259,57 @@ blueprint:
                     text:
                       multiline: true
 
-                visual_target:
-                  label: Svetlá / oblasť pre vizuálny signál
-                  selector:
-                    target:
-                      entity:
-                        - domain: light
-
-                visual_style:
-                  label: Svetelný signál
+                aas_event:
+                  label: AAS vizuálna notifikácia
                   selector:
                     select:
                       mode: dropdown
                       options:
-                        - label: Žiadny
+                        - label: Žiadna
                           value: none
-                        - label: Krátky flash
-                          value: flash_short
-                        - label: Dlhý flash
-                          value: flash_long
-                        - label: Zapnúť
-                          value: turn_on
-                        - label: Vypnúť
-                          value: turn_off
-                        - label: Prepnúť
-                          value: toggle
+                        - label: Ping
+                          value: ping
+                        - label: Pohyb
+                          value: pohyb
+                        - label: Zvonček
+                          value: zvoncek
+                        - label: Správa
+                          value: sprava
+                        - label: Upozornenie
+                          value: upozornenie
+                        - label: Chyba
+                          value: chyba
+                        - label: Úspech
+                          value: uspech
+                        - label: Informácia
+                          value: informacia
+                        - label: Pripomienka
+                          value: pripomienka
+
+                aas_scope:
+                  label: Kde prehrať AAS
+                  selector:
+                    select:
+                      mode: list
+                      options:
+                        - label: Na všetkých AAS zariadeniach
+                          value: all
+                        - label: Iba na vybraných ESP
+                          value: selected
+
+                aas_nodes:
+                  label: Vybrané AAS ESP
+                  selector:
+                    select:
+                      multiple: true
+                      mode: dropdown
+                      options:
+                        - label: Notifikačná žiarovka - esp-87-bulb
+                          value: esp-87-bulb
+                        - label: IKEA Vindriktning - esp-85-vindriktning
+                          value: esp-85-vindriktning
+                        - label: Aura - esphome-117-aura
+                          value: esphome-117-aura
 
                 custom_actions:
                   label: Vlastné HA akcie
@@ -231,12 +358,14 @@ blueprint:
         Event môže tieto hodnoty prepísať. Keď ich necháš pri evente prázdne,
         použijú sa tieto globálne nastavenia.
       input:
-        default_media_target:
-          name: Predvolený cieľ zvuku
-          default: {}
+        default_media_players:
+          name: Predvolené media playery
+          default: []
           selector:
-            target:
-              entity:
+            entity:
+              multiple: true
+              reorder: true
+              filter:
                 - domain: media_player
 
         default_sound:
@@ -246,6 +375,17 @@ blueprint:
             media:
               accept:
                 - audio/*
+
+        default_volume_percent:
+          name: Predvolená hlasitosť zvuku
+          default: 60
+          selector:
+            number:
+              min: 0
+              max: 100
+              step: 1
+              unit_of_measurement: "%"
+              mode: slider
 
         default_repeat_count:
           name: Predvolený počet prehratí
@@ -257,16 +397,17 @@ blueprint:
               step: 1
               mode: box
 
-        default_pause_seconds:
-          name: Predvolená pauza
-          default: 0
+        default_pause_between:
+          name: Predvolená pauza medzi prehratiami
+          default:
+            hours: 0
+            minutes: 0
+            seconds: 0
           selector:
-            number:
-              min: 0
-              max: 120
-              step: 0.5
-              unit_of_measurement: s
-              mode: box
+            duration:
+              enable_day: false
+              enable_second: true
+              enable_millisecond: false
 
         default_notify_target:
           name: Predvolený cieľ notifikácie
@@ -282,48 +423,18 @@ blueprint:
           selector:
             text: {}
 
-        default_visual_target:
-          name: Predvolený cieľ svetelného signálu
-          default: {}
-          selector:
-            target:
-              entity:
-                - domain: light
-
-        default_visual_style:
-          name: Predvolený svetelný signál
-          default: none
-          selector:
-            select:
-              mode: dropdown
-              options:
-                - label: Žiadny
-                  value: none
-                - label: Krátky flash
-                  value: flash_short
-                - label: Dlhý flash
-                  value: flash_long
-                - label: Zapnúť
-                  value: turn_on
-                - label: Vypnúť
-                  value: turn_off
-                - label: Prepnúť
-                  value: toggle
-
 variables:
   schedule_events: !input events
   date_overrides_config: !input date_overrides
 
-  global_media_target: !input default_media_target
+  global_media_players: !input default_media_players
   global_sound: !input default_sound
+  global_volume_percent: !input default_volume_percent
   global_repeat_count: !input default_repeat_count
-  global_pause_seconds: !input default_pause_seconds
+  global_pause_between: !input default_pause_between
 
   global_notify_target: !input default_notify_target
   global_notify_title: !input default_notify_title
-
-  global_visual_target: !input default_visual_target
-  global_visual_style: !input default_visual_style
 
   current_hm: "{{ now().strftime('%H:%M') }}"
   current_date: "{{ now().strftime('%Y-%m-%d') }}"
@@ -367,17 +478,18 @@ actions:
             event_time: "{{ (repeat.item.get('time', '') | string)[:5] }}"
             event_day_mode: "{{ repeat.item.get('day_mode', 'all') }}"
             event_weekdays: "{{ repeat.item.get('weekdays', []) or [] }}"
-            event_guard_entity: "{{ repeat.item.get('guard_entity', '') or '' }}"
-            event_guard_state: "{{ repeat.item.get('guard_state', '') or '' }}"
+            event_condition_rule: "{{ repeat.item.get('condition_rule', {}) or {} }}"
 
             event_sound: >-
               {{ repeat.item.get('sound') if repeat.item.get('sound') else global_sound }}
-            event_media_target: >-
-              {{ repeat.item.get('media_target') if repeat.item.get('media_target') else global_media_target }}
+            event_media_players: >-
+              {{ repeat.item.get('media_players', []) or global_media_players }}
+            event_volume_percent: >-
+              {{ repeat.item.get('volume_percent', global_volume_percent) | float(60) }}
             event_repeat_count: >-
               {{ repeat.item.get('repeat_count', global_repeat_count) | int(1) }}
-            event_pause_seconds: >-
-              {{ repeat.item.get('pause_seconds', global_pause_seconds) | float(0) }}
+            event_pause_between: >-
+              {{ repeat.item.get('pause_between') if repeat.item.get('pause_between') else global_pause_between }}
 
             event_notify_target: >-
               {{ repeat.item.get('notify_target') if repeat.item.get('notify_target') else global_notify_target }}
@@ -386,43 +498,107 @@ actions:
             event_notify_message: >-
               {{ repeat.item.get('notify_message') or repeat.item.get('name', 'Časový signál') }}
 
-            event_visual_target: >-
-              {{ repeat.item.get('visual_target') if repeat.item.get('visual_target') else global_visual_target }}
-            event_visual_style: >-
-              {{ repeat.item.get('visual_style') or global_visual_style }}
+            event_aas_event: "{{ repeat.item.get('aas_event', 'none') or 'none' }}"
+            event_aas_scope: "{{ repeat.item.get('aas_scope', 'all') or 'all' }}"
+            event_aas_nodes: "{{ repeat.item.get('aas_nodes', []) or [] }}"
 
             event_custom_actions: "{{ repeat.item.get('custom_actions', []) or [] }}"
 
         - variables:
-            event_allowed: >-
+            event_pause_seconds: >-
+              {{
+                (event_pause_between.get('hours', 0) | int(0)) * 3600
+                + (event_pause_between.get('minutes', 0) | int(0)) * 60
+                + (event_pause_between.get('seconds', 0) | int(0))
+              }}
+
+            day_allowed: >-
               {% set mode = event_day_mode %}
               {% if mode == 'all' %}
-                {% set day_ok = true %}
+                {{ true }}
               {% elif mode == 'workday' %}
-                {% set day_ok = today_mode == 'workday' %}
+                {{ today_mode == 'workday' }}
               {% elif mode == 'weekend' %}
-                {% set day_ok = today_mode == 'weekend' %}
+                {{ today_mode == 'weekend' }}
               {% elif mode == 'custom' %}
-                {% set day_ok = current_weekday in event_weekdays %}
+                {{ current_weekday in event_weekdays }}
               {% else %}
-                {% set day_ok = true %}
+                {{ true }}
               {% endif %}
 
-              {% if not event_guard_entity %}
-                {% set guard_ok = true %}
-              {% elif not event_guard_state %}
-                {% set guard_ok = states(event_guard_entity) not in ['unknown', 'unavailable'] %}
+            condition_allowed: >-
+              {% if not event_condition_rule %}
+                {{ true }}
               {% else %}
-                {% set guard_ok = is_state(event_guard_entity, event_guard_state) %}
+                {% set choice = event_condition_rule.get('active_choice', '') %}
+                {% set cfg = event_condition_rule.get(choice, {}) or {} %}
+                {% set entity_id = cfg.get('entity', '') %}
+
+                {% if not entity_id %}
+                  {{ false }}
+
+                {% elif choice == 'Boolean' %}
+                  {% set wanted = cfg.get('value', true) | bool %}
+                  {{ is_state(entity_id, 'on') if wanted else is_state(entity_id, 'off') }}
+
+                {% elif choice == 'Cislo' %}
+                  {% set raw_current = states(entity_id) %}
+                  {% set current = raw_current | float(none) %}
+                  {% set wanted = cfg.get('value') | float(none) %}
+                  {% set op = cfg.get('operator', 'eq') %}
+                  {% if current is none or wanted is none or raw_current in ['unknown', 'unavailable'] %}
+                    {{ false }}
+                  {% elif op == 'lt' %}
+                    {{ current < wanted }}
+                  {% elif op == 'lte' %}
+                    {{ current <= wanted }}
+                  {% elif op == 'eq' %}
+                    {{ current == wanted }}
+                  {% elif op == 'neq' %}
+                    {{ current != wanted }}
+                  {% elif op == 'gte' %}
+                    {{ current >= wanted }}
+                  {% elif op == 'gt' %}
+                    {{ current > wanted }}
+                  {% else %}
+                    {{ false }}
+                  {% endif %}
+
+                {% elif choice == 'Text' %}
+                  {% set current = states(entity_id) %}
+                  {% set wanted = cfg.get('value', '') | string %}
+                  {% set op = cfg.get('operator', 'eq') %}
+                  {% if current in ['unknown', 'unavailable'] %}
+                    {{ false }}
+                  {% elif op == 'eq' %}
+                    {{ current == wanted }}
+                  {% elif op == 'neq' %}
+                    {{ current != wanted }}
+                  {% elif op == 'contains' %}
+                    {{ wanted in current }}
+                  {% elif op == 'not_contains' %}
+                    {{ wanted not in current }}
+                  {% elif op == 'starts' %}
+                    {{ current.startswith(wanted) }}
+                  {% elif op == 'ends' %}
+                    {{ current.endswith(wanted) }}
+                  {% else %}
+                    {{ false }}
+                  {% endif %}
+
+                {% else %}
+                  {{ false }}
+                {% endif %}
               {% endif %}
-              {{ day_ok and guard_ok }}
+
+            event_allowed: "{{ day_allowed | bool and condition_allowed | bool }}"
 
         - choose:
             - conditions:
                 - condition: template
                   value_template: "{{ event_allowed }}"
               sequence:
-                - alias: Zvuk, svetlo, notifikácie a vlastné akcie paralelne
+                - alias: Zvuk, AAS, notifikácie a vlastné akcie paralelne
                   parallel:
                     - sequence:
                         - alias: Audio
@@ -432,17 +608,37 @@ actions:
                                   value_template: >-
                                     {{
                                       event_repeat_count > 0
-                                      and (event_media_target | count) > 0
+                                      and (event_media_players | count) > 0
                                       and event_sound is mapping
                                       and event_sound.get('media_content_id', '') != ''
                                     }}
                               sequence:
+                                - variables:
+                                    original_volumes: >-
+                                      {% set ns = namespace(items=[]) %}
+                                      {% for player in event_media_players %}
+                                        {% set ns.items = ns.items + [{
+                                          'entity_id': player,
+                                          'volume': state_attr(player, 'volume_level')
+                                        }] %}
+                                      {% endfor %}
+                                      {{ ns.items }}
+
+                                - alias: Nastav dočasnú hlasitosť
+                                  continue_on_error: true
+                                  action: media_player.volume_set
+                                  target:
+                                    entity_id: "{{ event_media_players }}"
+                                  data:
+                                    volume_level: "{{ event_volume_percent / 100 }}"
+
                                 - repeat:
                                     count: "{{ event_repeat_count }}"
                                     sequence:
                                       - continue_on_error: true
                                         action: media_player.play_media
-                                        target: "{{ event_media_target }}"
+                                        target:
+                                          entity_id: "{{ event_media_players }}"
                                         data:
                                           media_content_id: "{{ event_sound.get('media_content_id') }}"
                                           media_content_type: "{{ event_sound.get('media_content_type', 'music') }}"
@@ -459,49 +655,74 @@ actions:
                                               - delay:
                                                   seconds: "{{ event_pause_seconds }}"
 
+                                - alias: Daj prehrávaču chvíľu aktualizovať stav
+                                  delay:
+                                    milliseconds: 500
+
+                                - alias: Počkaj na dohratie posledného zvuku
+                                  wait_template: >-
+                                    {% set ns = namespace(done=true) %}
+                                    {% for player in event_media_players %}
+                                      {% if states(player) in ['playing', 'buffering'] %}
+                                        {% set ns.done = false %}
+                                      {% endif %}
+                                    {% endfor %}
+                                    {{ ns.done }}
+                                  timeout:
+                                    seconds: 60
+                                  continue_on_timeout: true
+
+                                - alias: Obnov pôvodnú hlasitosť každého prehrávača
+                                  repeat:
+                                    for_each: "{{ original_volumes }}"
+                                    sequence:
+                                      - choose:
+                                          - conditions:
+                                              - condition: template
+                                                value_template: "{{ repeat.item.volume is number }}"
+                                            sequence:
+                                              - continue_on_error: true
+                                                action: media_player.volume_set
+                                                target:
+                                                  entity_id: "{{ repeat.item.entity_id }}"
+                                                data:
+                                                  volume_level: "{{ repeat.item.volume }}"
+
                     - sequence:
-                        - alias: Svetelný signál
+                        - alias: AAS vizuálna notifikácia
                           choose:
                             - conditions:
                                 - condition: template
                                   value_template: >-
+                                    {{ event_aas_event != 'none' and event_aas_scope == 'all' }}
+                              sequence:
+                                - continue_on_error: true
+                                  action: mqtt.publish
+                                  data:
+                                    topic: aas/udalost
+                                    payload: "{{ event_aas_event }}"
+                                    qos: 1
+                                    retain: false
+
+                            - conditions:
+                                - condition: template
+                                  value_template: >-
                                     {{
-                                      (event_visual_target | count) > 0
-                                      and event_visual_style in ['flash_short', 'flash_long']
+                                      event_aas_event != 'none'
+                                      and event_aas_scope == 'selected'
+                                      and (event_aas_nodes | count) > 0
                                     }}
                               sequence:
-                                - continue_on_error: true
-                                  action: light.turn_on
-                                  target: "{{ event_visual_target }}"
-                                  data:
-                                    flash: "{{ 'short' if event_visual_style == 'flash_short' else 'long' }}"
-
-                            - conditions:
-                                - condition: template
-                                  value_template: >-
-                                    {{ (event_visual_target | count) > 0 and event_visual_style == 'turn_on' }}
-                              sequence:
-                                - continue_on_error: true
-                                  action: light.turn_on
-                                  target: "{{ event_visual_target }}"
-
-                            - conditions:
-                                - condition: template
-                                  value_template: >-
-                                    {{ (event_visual_target | count) > 0 and event_visual_style == 'turn_off' }}
-                              sequence:
-                                - continue_on_error: true
-                                  action: light.turn_off
-                                  target: "{{ event_visual_target }}"
-
-                            - conditions:
-                                - condition: template
-                                  value_template: >-
-                                    {{ (event_visual_target | count) > 0 and event_visual_style == 'toggle' }}
-                              sequence:
-                                - continue_on_error: true
-                                  action: light.toggle
-                                  target: "{{ event_visual_target }}"
+                                - repeat:
+                                    for_each: "{{ event_aas_nodes }}"
+                                    sequence:
+                                      - continue_on_error: true
+                                        action: mqtt.publish
+                                        data:
+                                          topic: "aas/udalost/{{ repeat.item }}"
+                                          payload: "{{ event_aas_event }}"
+                                          qos: 1
+                                          retain: false
 
                     - sequence:
                         - alias: Notify entity
