@@ -5,6 +5,7 @@ Aktualne blueprinty:
 - `bazen_filtracia_dynamicka.yaml`
 - `dvere_okna_kontakt_alert.yaml`
 - `casove_signaly_multi_event.yaml`
+- `setric_svetla.yaml`
 
 ## Bazen - dynamicka filtracia s dennymi blokmi
 
@@ -130,6 +131,35 @@ Vnorene `choose`, `if`, `repeat` a `parallel` zatial interpreter nevykonava.
 - casovac ma minutove rozlisenie; sekundy z time pickera sa ignoruju
 - `pause = 00:00:00` znamena okamzity dalsi `play_media`
 - obnovenie hlasitosti caka na stav playera `playing/buffering`; pri playeri, ktory stav nehlasi spolahlivo, je fallback timeout 60 s
+
+## Šetrič svetla (v1)
+
+`setric_svetla.yaml` je jedna blueprint automatizácia pre ľubovoľný počet miestností alebo samostatných pravidiel.
+Každé pravidlo má vlastné vstupy a vlastný čas neprítomnosti.
+
+Podporuje:
+
+- opakovateľné miestnosti cez `object` selector s `multiple: true`
+- viac prítomnostných entít na jednu miestnosť
+- `binary_sensor` a `input_boolean` ako zdroje prítomnosti
+- logiku `on = prítomnosť`, `off = neprítomnosť`
+- fail-safe správanie pre `unknown` a `unavailable` — časovač vtedy nebeží
+- vlastný `duration` timeout pre každú miestnosť
+- viac cieľových entít na vypnutie
+- svetlá, switche, ventilátory, media playery, climate, humidifier, remote, input boolean a sirény
+- generické `homeassistant.turn_off`, takže jedna miestnosť môže vypnúť mix rôznych domén
+- interný odpočet bez `timer` helperov
+- kontrolu každých 10 sekúnd
+
+### Ako sa počíta neprítomnosť
+
+Čas začne plynúť až vtedy, keď sú všetky zvolené prítomnostné entity v stave `off`.
+Za začiatok neprítomnosti sa berie najnovší `last_changed` zo zvolených senzorov — teda okamih, keď do stavu `off` prešiel posledný z nich.
+
+Ak sa ktorýkoľvek senzor prepne späť na `on`, miestnosť sa okamžite považuje za prítomnú a odpočet sa tým zruší.
+Pri `unknown` alebo `unavailable` sa vypnutie nevykoná.
+
+Po uplynutí timeoutu sa vypínajú len cieľové entity, ktoré ešte nie sú `off`. Ak počas neprítomnosti niekto niečo z cieľov znovu zapne, ďalšia kontrola ho po uplynutom limite znovu vypne.
 
 ## Import
 
