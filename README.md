@@ -9,6 +9,7 @@ Home Assistant veci, helpery a blueprinty.
 - `blueprints/automation/animus/casove_signaly_multi_event.yaml`
 - `blueprints/automation/animus/setric_svetla.yaml`
 - `blueprints/automation/animus/setric_svetiel.md`
+- `blueprints/automation/animus/entity_controller_logic.md`
 - `blueprints/automation/animus/example_instance_bazen.yaml`
 - `blueprints/automation/animus/README.md`
 
@@ -37,6 +38,15 @@ spustiť vlastnú akciu a jednorazovo ráno zhasnúť po východe slnka + offset
 Podrobný princíp, nastavenie, recovery správanie a changelog:
 
 - `blueprints/automation/animus/setric_svetiel.md`
+
+### EntityController — rozbor logiky
+
+Technická referencia pôvodnej integrácie `danobot/entity-controller` v9.7.6 pred prepisom do
+natívneho Home Assistant blueprintu alebo modernizovanej integrácie. Dokumentuje stavový automat,
+`blocked`, `overridden`, `constrained`, event/duration senzory, timery, backoff, night/stay mode,
+HA Context a rozdiely medzi dokumentáciou a aktuálnym zdrojákom.
+
+- `blueprints/automation/animus/entity_controller_logic.md`
 
 Prehľad všetkých blueprintov a import:
 
