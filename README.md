@@ -7,6 +7,7 @@ Home Assistant veci, helpery a blueprinty.
 - `blueprints/automation/animus/bazen_filtracia_dynamicka.yaml`
 - `blueprints/automation/animus/dvere_okna_kontakt_alert.yaml`
 - `blueprints/automation/animus/casove_signaly_multi_event.yaml`
+- `blueprints/automation/animus/setric_svetla.yaml`
 - `blueprints/automation/animus/example_instance_bazen.yaml`
 - `blueprints/automation/animus/README.md`
 
@@ -23,6 +24,10 @@ Kontaktovy senzor, zvuky, timer, nocny rezim a mobilne akcie.
 ### Časové znamenia
 
 Jedna blueprint inštancia s ľubovoľným počtom časových znamení. Každé môže mať vlastné dni, podmienku, zvuk, hlasitosť s obnovením pôvodnej hodnoty, opakovanie, prestávku, textové oznámenie, AAS signalizáciu a doplnkový program.
+
+### Šetrič svetla
+
+Jedna blueprint inštancia pre ľubovoľný počet miestností. Každá miestnosť má vlastné senzory prítomnosti, čas neprítomnosti a zoznam entít, ktoré sa majú po uplynutí času vypnúť.
 
 Podrobnosti, import a poznamky k beta verzii su v:
 

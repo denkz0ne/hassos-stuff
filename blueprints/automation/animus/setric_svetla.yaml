@@ -1,0 +1,163 @@
+blueprint:
+  name: "Šetrič svetla"
+  description: |
+    Jedna automatizácia pre viac miestností alebo pravidiel.
+    Každé pravidlo sleduje vlastné senzory prítomnosti. Keď všetky zostanú
+    v stave neprítomnosti po nastavený čas, vybrané svetlá a zariadenia sa vypnú.
+
+    Prítomnostné vstupy používajú jednoduchú logiku:
+    `on` = prítomnosť, `off` = neprítomnosť.
+    Stavy `unknown` a `unavailable` sa z bezpečnostných dôvodov nepovažujú za neprítomnosť.
+
+    Blueprint nepotrebuje timer helpery. Odpočet sa počíta z poslednej zmeny stavov senzorov
+    a kontroluje sa každých 10 sekúnd.
+  domain: automation
+  author: denkz0ne
+  homeassistant:
+    min_version: 2026.9.0
+
+  input:
+    rooms_section:
+      name: Miestnosti a pravidlá
+      icon: mdi:lightbulb-auto
+      description: Pridaj miestnosti, nastav prítomnosť, čas nečinnosti a čo sa má vypnúť.
+      input:
+        rooms:
+          name: Miestnosti
+          description: Každý záznam funguje samostatne a má vlastný odpočet.
+          default: []
+          selector:
+            object:
+              multiple: true
+              label_field: name
+              fields:
+                name:
+                  label: Názov miestnosti
+                  required: true
+                  selector:
+                    text: {}
+
+                presence_entities:
+                  label: Senzory prítomnosti
+                  required: true
+                  selector:
+                    entity:
+                      multiple: true
+                      reorder: true
+                      filter:
+                        - domain: binary_sensor
+                        - domain: input_boolean
+
+                absence_timeout:
+                  label: Vypnúť po neprítomnosti
+                  required: true
+                  selector:
+                    duration:
+                      enable_day: false
+                      enable_second: true
+                      enable_millisecond: false
+
+                turn_off_entities:
+                  label: Vypnúť tieto entity
+                  required: true
+                  selector:
+                    entity:
+                      multiple: true
+                      reorder: true
+                      filter:
+                        - domain: light
+                        - domain: switch
+                        - domain: fan
+                        - domain: media_player
+                        - domain: climate
+                        - domain: humidifier
+                        - domain: remote
+                        - domain: input_boolean
+                        - domain: siren
+
+variables:
+  room_rules: !input rooms
+
+triggers:
+  - trigger: time_pattern
+    seconds: "/10"
+
+conditions: []
+
+actions:
+  - alias: Vyhodnoť miestnosti
+    repeat:
+      for_each: "{{ room_rules }}"
+      sequence:
+        - variables:
+            room_name: "{{ repeat.item.get('name', 'Miestnosť') }}"
+            room_presence_entities: "{{ repeat.item.get('presence_entities', []) or [] }}"
+            room_absence_timeout: "{{ repeat.item.get('absence_timeout', {}) or {} }}"
+            room_turn_off_entities: "{{ repeat.item.get('turn_off_entities', []) or [] }}"
+
+        - variables:
+            room_timeout_seconds: >-
+              {{
+                (room_absence_timeout.get('hours', 0) | int(0)) * 3600
+                + (room_absence_timeout.get('minutes', 0) | int(0)) * 60
+                + (room_absence_timeout.get('seconds', 0) | int(0))
+              }}
+
+            room_is_absent: >-
+              {% set ns = namespace(absent=(room_presence_entities | count > 0)) %}
+              {% for entity_id in room_presence_entities %}
+                {% if not is_state(entity_id, 'off') %}
+                  {% set ns.absent = false %}
+                {% endif %}
+              {% endfor %}
+              {{ ns.absent }}
+
+            room_entities_to_turn_off: >-
+              {% set ns = namespace(items=[]) %}
+              {% for entity_id in room_turn_off_entities %}
+                {% set current = states(entity_id) %}
+                {% if current not in ['off', 'unknown', 'unavailable'] %}
+                  {% set ns.items = ns.items + [entity_id] %}
+                {% endif %}
+              {% endfor %}
+              {{ ns.items }}
+
+        - variables:
+            room_absence_started_ts: >-
+              {% set ns = namespace(latest=0) %}
+              {% if room_is_absent | bool(false) %}
+                {% for entity_id in room_presence_entities %}
+                  {% set parts = entity_id.split('.', 1) %}
+                  {% set entity = states[parts[0]][parts[1]] %}
+                  {% set changed = as_timestamp(entity.last_changed, 0) | float(0) %}
+                  {% if changed > ns.latest %}
+                    {% set ns.latest = changed %}
+                  {% endif %}
+                {% endfor %}
+              {% endif %}
+              {{ ns.latest }}
+
+        - variables:
+            room_absence_elapsed: >-
+              {% if (room_is_absent | bool(false)) and (room_absence_started_ts | float(0) > 0) %}
+                {{ [0, as_timestamp(now()) - (room_absence_started_ts | float(0))] | max }}
+              {% else %}
+                0
+              {% endif %}
+
+        - if:
+            - condition: template
+              value_template: >-
+                {{
+                  (room_is_absent | bool(false))
+                  and ((room_absence_elapsed | float(0)) >= (room_timeout_seconds | float(0)))
+                  and (room_entities_to_turn_off | count > 0)
+                }}
+          then:
+            - alias: Vypni entity po neprítomnosti
+              action: homeassistant.turn_off
+              target:
+                entity_id: "{{ room_entities_to_turn_off }}"
+
+mode: single
+max_exceeded: silent
