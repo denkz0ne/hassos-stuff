@@ -1,169 +1,134 @@
 # Blueprinty pre HASS
 
-Aktualne blueprinty:
+Home Assistant blueprinty v tomto priečinku:
 
 - `bazen_filtracia_dynamicka.yaml`
 - `dvere_okna_kontakt_alert.yaml`
 - `casove_signaly_multi_event.yaml`
 - `setric_svetla.yaml`
 
-## Bazen - dynamicka filtracia s dennymi blokmi
+## Bazén — dynamická filtrácia
 
-`bazen_filtracia_dynamicka.yaml` riesi dynamicku filtraciu bazena v dennych blokoch:
+`bazen_filtracia_dynamicka.yaml` riadi filtráciu bazéna v denných blokoch.
 
-- rano
-- obed
-- vecer
-- najneskorsie vecerne vypnutie
+Podporuje režimy:
 
-Podporuje rezimy:
+- `Auto`,
+- `Eco`,
+- `Standard`,
+- `Intenzívny`.
 
-- `Auto`
-- `Eco`
-- `Standard`
-- `Intenzivny`
+## Dvere / okno — kontakt, zvuk a opakovaný alert
 
-## Dvere/okno - kontakt, zvuk a opakovany alert
+`dvere_okna_kontakt_alert.yaml` je univerzálny blueprint pre jeden kontaktný senzor.
 
-`dvere_okna_kontakt_alert.yaml` je univerzalny blueprint pre jeden kontaktovy senzor.
+Podporuje:
 
-- jedna instancia = jeden `binary_sensor`
-- kazda instancia pouziva vlastny externy `timer`
-- timer sa vybera v instancii blueprintu a je viditelny na dashboarde
-- kontaktovy senzor je filtrovany na `door` a `window`
-- zvuky sa vyberaju cez Home Assistant media picker
-- zvuk otvorenia, zatvorenia a alertu sa prehrava cez jeden alebo viac vybranych `media_player`
-- mobilne notifikacie sa nastavuju cez action picker
-- mobilny alert pri zabudnutom otvoreni sa posiela iba raz
-- periodicky sa opakuje iba zvuk alertu
-- po alerte sa obnovi povodna hlasitost prehravacov
-- podporuje nocny rezim s vlastnym casom od-do
-- mobilne notifikacie su volitelne
+- jeden `binary_sensor` na inštanciu,
+- externý `timer` viditeľný aj na dashboarde,
+- senzory typu dvere a okno,
+- zvuky cez Home Assistant media picker,
+- jeden alebo viac `media_player`,
+- mobilné notifikácie cez Action selector,
+- jednorazový mobilný alert pri zabudnutom otvorení,
+- opakovaný zvuk alertu,
+- obnovenie pôvodnej hlasitosti prehrávačov,
+- nočný režim s vlastným časom.
 
 ## Časové znamenia (BETA)
 
-`casove_signaly_multi_event.yaml` je samostatná blueprint automatizácia pre ľubovoľný počet časových znamení.
-Nevyzaduje pomocne skripty ani helpery.
+`casove_signaly_multi_event.yaml` je jedna automatizácia pre ľubovoľný počet časových znamení.
+Nevyžaduje pomocné skripty ani helpery.
 
 Každé znamenie sa nastavuje cez moderný `object` selector s `multiple: true`.
 
 Podporuje:
 
-- lubovolny pocet casov v jednej instancii blueprintu
-- kazdy den / pracovne dni Po-Pi / vikend So-Ne / vlastne dni
-- interne datumove vynimky pre sviatok alebo pracovnu sobotu
-- typovu volitelnu podmienku:
-  - Boolean -> true/false
-  - Cislo -> <, <=, =, !=, >=, >
-  - Text/stav -> =, !=, obsahuje, neobsahuje, zacina, konci
-- media picker pre zvuk
-- jeden alebo viac `media_player`
-- per-event hlasitost 0-100 % s automatickym obnovenim povodnej hlasitosti kazdeho playera
-- pocet prehrati 0-20
-- pauzu cez HA duration picker `hh:mm:ss`
-- moderne `notify.send_message`
-- AAS vizualne eventy cez MQTT
-- AAS broadcast na vsetky nody alebo cielenie iba na vybrane ESP
-- Vlastne HA akcie priamo cez Action selector v kazdej udalosti
-- globalne audio/notify defaulty
-- viac udalosti v rovnakej minute
-- paralelne vetvy pre audio, AAS, notify a vlastne akcie
+- ľubovoľný počet časov v jednej inštancii,
+- každý deň / pracovné dni / víkend / vlastné dni,
+- dátumové výnimky pre sviatky a pracovné soboty,
+- typovú voliteľnú podmienku,
+- media picker pre zvuk,
+- jeden alebo viac `media_player`,
+- vlastnú hlasitosť s obnovením pôvodnej hodnoty,
+- opakovanie a pauzu,
+- `notify.send_message`,
+- AAS vizuálne eventy cez MQTT,
+- vlastné HA akcie,
+- viac udalostí v rovnakej minúte,
+- paralelné vetvy pre audio, AAS, notifikácie a ďalšie akcie.
 
-### AAS vizualna signalizacia
+### AAS vizuálna signalizácia
 
-Blueprint pouziva semanticke AAS eventy:
+Podporované semantické eventy:
 
 `ping`, `pohyb`, `zvoncek`, `sprava`, `upozornenie`, `chyba`, `uspech`, `informacia`, `pripomienka`.
 
-Pri volbe `Na vsetkych AAS zariadeniach` publikuje:
+Broadcast:
 
 ```text
 aas/udalost
 ```
 
-Pri volbe `Iba na vybranych ESP` publikuje na:
+Cielenie na konkrétny node:
 
 ```text
 aas/udalost/<node_id>
 ```
 
-Aktualne podporovane node ID:
+Aktuálne node ID:
 
-- `esp-87-bulb`
-- `esp-85-vindriktning`
-- `esphome-117-aura`
+- `esp-87-bulb`,
+- `esp-85-vindriktning`,
+- `esphome-117-aura`.
 
-Cielenie vyzaduje AAS firmware s podporou per-node topicov.
+### Vlastné HA akcie
 
-### Audio a hlasitost
+Pole `Doplnkový program` používa natívny Home Assistant Action selector.
 
-Pred prehratim sa ulozi aktualny `volume_level` kazdeho zvoleneho media playera.
-Blueprint nastavi hlasitost udalosti, prehra zvuk(y), pocka na ukoncenie posledneho prehravania
-(maximalne 60 s) a nasledne kazdemu playeru obnovi jeho vlastnu povodnu hlasitost.
+Runtime interpreter podporuje:
 
-### Pracovne dni bez Workday helpera
+- bežné `action`/service kroky,
+- `target`,
+- `data`,
+- `delay`,
+- aktiváciu `scene`.
 
-Blueprint pocita bezny rezim autonomne:
+Vnorené `choose`, `if`, `repeat` a `parallel` zatiaľ nie sú podporované.
 
-- Po-Pi = pracovny den
-- So-Ne = vikend / volno
+## Šetrič Svetiel — v1.1.0
 
-V sekcii `Kalendar bez helperov` mozes pridat datumove vynimky:
+`setric_svetla.yaml` je jedna blueprint automatizácia pre ľubovoľný počet miestností alebo
+samostatných pravidiel.
 
-- sviatok cez pracovny tyzden -> `Vikend / volno`
-- pracovna sobota -> `Pracovny den`
+Každá miestnosť má vlastné:
 
-### Vlastne HA akcie
+- zapnutie/vypnutie pravidla,
+- senzory prítomnosti,
+- čas neprítomnosti,
+- cieľové entity na vypnutie,
+- voliteľnú vlastnú akciu po neprítomnosti,
+- voliteľné ranné zhasnutie po východe slnka + offset.
 
-Každé znamenie má pole `Doplnkový program` s natívnym Home Assistant Action selectorom.
+Základná logika:
 
-BETA runtime interpreter podporuje:
+- `on` = prítomnosť,
+- `off` = neprítomnosť,
+- `unknown` / `unavailable` = nevypínať,
+- všetky senzory musia byť `off`,
+- po timeout-e sa použije `homeassistant.turn_off`,
+- vlastná akcia sa vykoná iba pri neprítomnosti,
+- ranné zhasnutie je jednorazové OFF bez ďalšieho blokovania.
 
-- bezne action/service kroky s `action`, `target` a `data`
-- action bez targetu alebo bez data
-- `delay`
-- aktivaciu `scene`
+Blueprint nepoužíva timer helpery. Kontroluje stav každých 30 sekúnd a po štarte Home Assistanta.
 
-Vnorene `choose`, `if`, `repeat` a `parallel` zatial interpreter nevykonava.
+Podrobný princíp, recovery po reloade/reštarte, obmedzenia a changelog:
 
-### BETA obmedzenia
-
-- casovac ma minutove rozlisenie; sekundy z time pickera sa ignoruju
-- `pause = 00:00:00` znamena okamzity dalsi `play_media`
-- obnovenie hlasitosti caka na stav playera `playing/buffering`; pri playeri, ktory stav nehlasi spolahlivo, je fallback timeout 60 s
-
-## Šetrič svetla (v1)
-
-`setric_svetla.yaml` je jedna blueprint automatizácia pre ľubovoľný počet miestností alebo samostatných pravidiel.
-Každé pravidlo má vlastné vstupy a vlastný čas neprítomnosti.
-
-Podporuje:
-
-- opakovateľné miestnosti cez `object` selector s `multiple: true`
-- viac prítomnostných entít na jednu miestnosť
-- `binary_sensor` a `input_boolean` ako zdroje prítomnosti
-- logiku `on = prítomnosť`, `off = neprítomnosť`
-- fail-safe správanie pre `unknown` a `unavailable` — časovač vtedy nebeží
-- vlastný `duration` timeout pre každú miestnosť
-- viac cieľových entít na vypnutie
-- svetlá, switche, ventilátory, media playery, climate, humidifier, remote, input boolean a sirény
-- generické `homeassistant.turn_off`, takže jedna miestnosť môže vypnúť mix rôznych domén
-- interný odpočet bez `timer` helperov
-- kontrolu každých 10 sekúnd
-
-### Ako sa počíta neprítomnosť
-
-Čas začne plynúť až vtedy, keď sú všetky zvolené prítomnostné entity v stave `off`.
-Za začiatok neprítomnosti sa berie najnovší `last_changed` zo zvolených senzorov — teda okamih, keď do stavu `off` prešiel posledný z nich.
-
-Ak sa ktorýkoľvek senzor prepne späť na `on`, miestnosť sa okamžite považuje za prítomnú a odpočet sa tým zruší.
-Pri `unknown` alebo `unavailable` sa vypnutie nevykoná.
-
-Po uplynutí timeoutu sa vypínajú len cieľové entity, ktoré ešte nie sú `off`. Ak počas neprítomnosti niekto niečo z cieľov znovu zapne, ďalšia kontrola ho po uplynutom limite znovu vypne.
+- [`setric_svetiel.md`](setric_svetiel.md)
 
 ## Import
 
-1. `Nastavenia -> Automatizacie a sceny -> Blueprints`
+1. `Nastavenia -> Automatizácie a scény -> Blueprints`
 2. `Import blueprint`
-3. vloz URL alebo obsah blueprintu
-4. vytvor novu automatizaciu z blueprintu
+3. vlož GitHub URL alebo obsah blueprintu
+4. vytvor novú automatizáciu z blueprintu
