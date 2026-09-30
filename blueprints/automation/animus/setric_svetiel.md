@@ -1,6 +1,6 @@
 # Šetrič Svetiel
 
-> Aktuálna verzia: **1.1.0**
+> Aktuálna verzia: **1.1.1**
 
 Šetrič Svetiel je Home Assistant blueprint pre viac miestností v jednej automatizácii.
 Jeho úloha je jednoduchá: keď miestnosť zostane prázdna dostatočne dlho, vypne zvolené
@@ -38,12 +38,17 @@ Ak je vypnutý, Šetrič Svetiel túto miestnosť úplne ignoruje.
 
 ### Senzory prítomnosti
 
-Podporované sú:
+Picker zámerne ponúka iba entity, ktoré dávajú pre prítomnosť zmysel:
 
-- `binary_sensor`,
-- `input_boolean`.
+- `binary_sensor` s `device_class: motion`,
+- `binary_sensor` s `device_class: occupancy`,
+- `binary_sensor` s `device_class: presence`,
+- `input_boolean` pre vlastné helpery alebo odvodený stav prítomnosti.
 
 Môže ich byť viac. Stačí, aby jeden z nich hlásil `on`, a miestnosť sa považuje za obsadenú.
+
+Filtrovane sú iba možnosti v editore blueprintu. Runtime logika ostáva jednoduchá:
+`on` znamená prítomnosť a `off` neprítomnosť.
 
 ### Zhasnúť po neprítomnosti
 
@@ -56,19 +61,21 @@ Po uplynutí času sa vypnú iba cieľové entity, ktoré ešte nie sú `off`.
 
 ### Vypnúť tieto entity
 
-Jedna miestnosť môže vypnúť mix podporovaných domén, napríklad:
+Picker ponúka domény vhodné na jednoduché vypnutie:
 
 - `light`,
 - `switch`,
+- `group`,
 - `fan`,
 - `media_player`,
-- `climate`,
 - `humidifier`,
-- `remote`,
-- `input_boolean`,
-- `siren`.
+- `input_boolean`.
 
-Vypínanie používa generické `homeassistant.turn_off`.
+Vypínanie používa generické `homeassistant.turn_off`, takže jedna miestnosť môže naraz vypnúť
+mix podporovaných typov zariadení.
+
+Z pickeru sú zámerne odstránené domény ako `climate`, `remote` a `siren`. Technicky sa vypnúť
+dajú, ale pre Šetrič Svetiel skôr zvyšovali šancu na nechcený výber než úžitok.
 
 ### Vlastná akcia po neprítomnosti
 
@@ -78,7 +85,7 @@ Vlastná akcia sa spustí **iba vtedy, keď Šetrič Svetiel vypína miestnosť 
 Ranné zhasnutie ju nikdy nespúšťa.
 
 Dynamické akcie vo vnútri opakovateľného objektu sa vykonávajú interným interpreterom.
-Verzia 1.1.0 podporuje:
+Verzia 1.1.1 podporuje:
 
 - bežné `action`/service kroky,
 - `target`,
@@ -169,6 +176,14 @@ Ranné zhasnutie sa dá prakticky otestovať až okolo reálneho východu slnka.
 možné dočasne nastaviť malý offset.
 
 ## Changelog
+
+### 1.1.1 — 2026-09-30
+
+- picker prítomnosti obmedzený na `motion`, `occupancy`, `presence` a `input_boolean`,
+- picker cieľových entít zúžený na bežné vypínateľné domény,
+- pridaná podpora `group` medzi cieľmi,
+- z cieľového pickera odstránené `climate`, `remote` a `siren`,
+- runtime logika zostala bez zmeny.
 
 ### 1.1.0 — 2026-09-30
 
