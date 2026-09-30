@@ -1,7 +1,7 @@
 blueprint:
   name: "Šetrič Svetiel"
   description: |
-    **Verzia 1.1.0**
+    **Verzia 1.1.1**
 
     Jedna automatizácia pre viac miestností. Každá miestnosť si stráži vlastnú
     prítomnosť, čas nečinnosti a zariadenia, ktoré má po odchode vypnúť.
@@ -57,6 +57,10 @@ blueprint:
                       reorder: true
                       filter:
                         - domain: binary_sensor
+                          device_class:
+                            - motion
+                            - occupancy
+                            - presence
                         - domain: input_boolean
 
                 absence_timeout:
@@ -78,13 +82,11 @@ blueprint:
                       filter:
                         - domain: light
                         - domain: switch
+                        - domain: group
                         - domain: fan
                         - domain: media_player
-                        - domain: climate
                         - domain: humidifier
-                        - domain: remote
                         - domain: input_boolean
-                        - domain: siren
 
                 custom_actions:
                   label: Vlastná akcia po neprítomnosti
