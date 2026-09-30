@@ -112,6 +112,17 @@ actions:
               {% endfor %}
               {{ ns.absent }}
 
+            room_entities_to_turn_off: >-
+              {% set ns = namespace(items=[]) %}
+              {% for entity_id in room_turn_off_entities %}
+                {% set current = states(entity_id) %}
+                {% if current not in ['off', 'unknown', 'unavailable'] %}
+                  {% set ns.items = ns.items + [entity_id] %}
+                {% endif %}
+              {% endfor %}
+              {{ ns.items }}
+
+        - variables:
             room_absence_started_ts: >-
               {% set ns = namespace(latest=0) %}
               {% if room_is_absent | bool(false) %}
@@ -125,16 +136,6 @@ actions:
                 {% endfor %}
               {% endif %}
               {{ ns.latest }}
-
-            room_entities_to_turn_off: >-
-              {% set ns = namespace(items=[]) %}
-              {% for entity_id in room_turn_off_entities %}
-                {% set current = states(entity_id) %}
-                {% if current not in ['off', 'unknown', 'unavailable'] %}
-                  {% set ns.items = ns.items + [entity_id] %}
-                {% endif %}
-              {% endfor %}
-              {{ ns.items }}
 
         - variables:
             room_absence_elapsed: >-
