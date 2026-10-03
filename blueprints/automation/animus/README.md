@@ -2,10 +2,27 @@
 
 Home Assistant blueprinty v tomto priečinku:
 
-- `bazen_filtracia_dynamicka.yaml`
-- `dvere_okna_kontakt_alert.yaml`
-- `casove_signaly_multi_event.yaml`
-- `setric_svetla.yaml`
+- `bazen_filtracia_dynamicka.yaml` — **v1.0.0**
+- `dvere_okna_kontakt_alert.yaml` — **v1.0.0**
+- `casove_signaly_multi_event.yaml` — **v1.0.0**
+- `setric_svetla.yaml` — **v1.1.3**
+
+## Aktualizácie a verzovanie
+
+Všetky blueprinty v tejto kolekcii používajú rovnaký princíp:
+
+- `blueprint.source_url` smeruje na stabilný súbor vo vetve `main`,
+- verzia je uvedená na začiatku popisu vo formáte `**Version**: x.y.z`,
+- funkčné zmeny zvyšujú minor verziu,
+- opravy bez zmeny funkcií zvyšujú patch verziu,
+- breaking zmeny zvyšujú major verziu.
+
+`source_url` je natívna metadata Home Assistanta a je dôležitá pre opätovný import a kontrolu
+zdroja. Textový `Version` marker je navyše ľahko čitateľný používateľom aj externým nástrojom,
+ktoré porovnávajú lokálnu a vzdialenú verziu blueprintu.
+
+Pri publikovaní novej verzie sa nemení cesta k YAML súboru. Stabilná URL zostáva na `main`, aby
+existujúce importy neostali visieť na starej vetve alebo commite.
 
 ## Bazén — dynamická filtrácia
 
@@ -96,19 +113,23 @@ Runtime interpreter podporuje:
 
 Vnorené `choose`, `if`, `repeat` a `parallel` zatiaľ nie sú podporované.
 
-## Šetrič Svetiel — v1.1.2
+## Šetrič Svetiel — v1.1.3
 
 `setric_svetla.yaml` je jedna blueprint automatizácia pre ľubovoľný počet miestností alebo
 samostatných pravidiel.
 
 Každá miestnosť má vlastné:
 
-- zapnutie/vypnutie pravidla; nové pravidlo je predvolene aktívne,
+- zapnutie/vypnutie pravidla,
 - senzory prítomnosti,
 - čas neprítomnosti,
 - cieľové entity na vypnutie,
 - voliteľnú vlastnú akciu po neprítomnosti,
 - voliteľné ranné zhasnutie po východe slnka + offset.
+
+Ak staršia uložená konfigurácia nemá pole `enabled`, runtime ju považuje za aktívnu. Home Assistant
+aktuálne nepodporuje `default` priamo na vnorenom poli `object` selectora, preto sa default prepínača
+nevynucuje neplatnou schémou.
 
 Picker prítomnosti ponúka iba `motion`, `occupancy`, `presence` a `input_boolean`.
 Ciele na vypnutie sú zúžené na `light`, `switch`, `group`, `fan`, `media_player`, `humidifier`
@@ -134,5 +155,5 @@ Podrobný princíp, recovery po reloade/reštarte, obmedzenia a changelog:
 
 1. `Nastavenia -> Automatizácie a scény -> Blueprints`
 2. `Import blueprint`
-3. vlož GitHub URL alebo obsah blueprintu
+3. vlož stabilnú GitHub URL zo súboru v `main`
 4. vytvor novú automatizáciu z blueprintu
