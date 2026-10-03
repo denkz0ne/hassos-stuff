@@ -96,14 +96,14 @@ Runtime interpreter podporuje:
 
 Vnorené `choose`, `if`, `repeat` a `parallel` zatiaľ nie sú podporované.
 
-## Šetrič Svetiel — v1.1.1
+## Šetrič Svetiel — v1.1.2
 
 `setric_svetla.yaml` je jedna blueprint automatizácia pre ľubovoľný počet miestností alebo
 samostatných pravidiel.
 
 Každá miestnosť má vlastné:
 
-- zapnutie/vypnutie pravidla,
+- zapnutie/vypnutie pravidla; nové pravidlo je predvolene aktívne,
 - senzory prítomnosti,
 - čas neprítomnosti,
 - cieľové entity na vypnutie,
