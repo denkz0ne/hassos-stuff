@@ -1,7 +1,7 @@
 blueprint:
   name: "Šetrič Svetiel"
   description: |
-    **Verzia 1.1.1**
+    **Verzia 1.1.2**
 
     Jedna automatizácia pre viac miestností. Každá miestnosť si stráži vlastnú
     prítomnosť, čas nečinnosti a zariadenia, ktoré má po odchode vypnúť.
@@ -39,6 +39,7 @@ blueprint:
                 enabled:
                   label: Aktívne pravidlo
                   required: true
+                  default: true
                   selector:
                     boolean: {}
 
