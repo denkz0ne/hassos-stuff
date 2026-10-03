@@ -1,6 +1,8 @@
 blueprint:
   name: "Časové znamenia"
   description: |
+    **Version**: 1.0.0
+
     Časové znamenie ohlásilo... čo si nastavíš. 🙂
     Naplánuj ľubovoľný počet zvukových, svetelných a ďalších oznámení
     v jednej automatizácii. Každé znamenie môže mať vlastný čas, dni,
@@ -10,6 +12,7 @@ blueprint:
     parallel a if v poli Ďalšie akcie zatiaľ nie sú podporované.
   domain: automation
   author: denkz0ne
+  source_url: https://github.com/denkz0ne/hassos-stuff/blob/main/blueprints/automation/animus/casove_signaly_multi_event.yaml
   homeassistant:
     min_version: 2026.9.0
 

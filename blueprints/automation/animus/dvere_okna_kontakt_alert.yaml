@@ -1,6 +1,8 @@
 blueprint:
   name: Dvere/okno - kontakt, zvuk a opakovany alert
   description: |
+    **Version**: 1.0.0
+
     Univerzalny blueprint pre jeden kontaktovy senzor dveri alebo okna.
 
     Jedna instancia blueprintu ovlada jeden binary_sensor a jeden externy timer.
@@ -10,6 +12,7 @@ blueprint:
     zvuku az do zatvorenia, nocny rezim a jednorazove mobilne notifikacie.
   domain: automation
   author: Codex
+  source_url: https://github.com/denkz0ne/hassos-stuff/blob/main/blueprints/automation/animus/dvere_okna_kontakt_alert.yaml
   homeassistant:
     min_version: 2024.6.0
   input:

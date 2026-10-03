@@ -1,12 +1,25 @@
 # Šetrič Svetiel
 
-> Aktuálna verzia: **1.1.2**
+> Aktuálna verzia: **1.1.3**
 
 Šetrič Svetiel je Home Assistant blueprint pre viac miestností v jednej automatizácii.
 Jeho úloha je jednoduchá: keď miestnosť zostane prázdna dostatočne dlho, vypne zvolené
 svetlá a zariadenia. Bez scén, bez kúziel, bez predstierania, že zabudnutá lampa je životný štýl. 🙂
 
 Blueprint je navrhnutý tak, aby sa jednotlivé miestnosti nastavovali ako samostatné opakovateľné bloky.
+
+## Zdroj a aktualizácie
+
+Stabilný zdroj blueprintu je:
+
+`https://github.com/denkz0ne/hassos-stuff/blob/main/blueprints/automation/animus/setric_svetla.yaml`
+
+Rovnaká adresa je zapísaná aj v `blueprint.source_url`. V popise blueprintu sa verzia zapisuje vo
+formáte `**Version**: x.y.z`, aby bola čitateľná používateľovi a použiteľná aj pre externé
+kontroléry aktualizácií.
+
+Pri ďalších vydaniach zostáva cesta k YAML súboru rovnaká. Nová verzia sa publikuje do `main`,
+nie do novej URL.
 
 ## Základný princíp
 
@@ -34,8 +47,15 @@ v stave `off`.
 
 Hlavný vypínač konkrétneho bloku.
 
-Nová miestnosť sa vytvorí predvolene ako **aktívna**. Ak pravidlo vypneš, Šetrič Svetiel túto
-miestnosť úplne ignoruje.
+Ak pravidlo vypneš, Šetrič Svetiel túto miestnosť úplne ignoruje.
+
+Pre spätnú kompatibilitu platí: ak staršia uložená konfigurácia pole `enabled` vôbec nemá,
+runtime ho vyhodnotí ako `true`.
+
+Home Assistant však aktuálne nepodporuje `default` priamo na vnorenom poli `object` selectora.
+Preto sa predvolená poloha checkboxu pri vytváraní nového záznamu nedá korektne vynútiť cez
+`fields.enabled.default`. Verzia 1.1.2 sa o to pokúsila a výsledkom bola neplatná schema; 1.1.3 túto
+chybu opravuje.
 
 ### Senzory prítomnosti
 
@@ -86,7 +106,7 @@ Vlastná akcia sa spustí **iba vtedy, keď Šetrič Svetiel vypína miestnosť 
 Ranné zhasnutie ju nikdy nespúšťa.
 
 Dynamické akcie vo vnútri opakovateľného objektu sa vykonávajú interným interpreterom.
-Verzia 1.1.2 podporuje:
+Verzia 1.1.3 podporuje:
 
 - bežné `action`/service kroky,
 - `target`,
@@ -183,11 +203,19 @@ možné dočasne nastaviť malý offset.
 
 ## Changelog
 
+### 1.1.3 — 2026-10-03
+
+- opravená neplatná schema z 1.1.2; odstránené nepodporované `default` z vnoreného `object` poľa,
+- pridaný stabilný `blueprint.source_url` smerujúci na vetvu `main`,
+- verzia v popise zjednotená na marker `**Version**: x.y.z`,
+- runtime fallback `enabled -> true` zostáva zachovaný,
+- funkčná logika vypínania sa nemení.
+
 ### 1.1.2 — 2026-10-03
 
-- nové miestnosti majú `Aktívne pravidlo` predvolene zapnuté,
-- 30-sekundový kontrolný cyklus zostáva zámerne zachovaný,
-- runtime logika vypínania sa nemení.
+- pokus nastaviť `Aktívne pravidlo` ako predvolene zapnuté priamo vo vnorenom `object` poli,
+- táto verzia obsahovala nepodporovaný kľúč `default` v `fields.enabled` a bola nahradená 1.1.3,
+- 30-sekundový kontrolný cyklus zostal zachovaný.
 
 ### 1.1.1 — 2026-09-30
 

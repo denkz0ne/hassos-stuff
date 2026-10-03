@@ -1,6 +1,8 @@
 blueprint:
   name: Bazén - dynamická filtrácia s dennými blokmi
   description: |
+    **Version**: 1.0.0
+
     Dynamická filtrácia pre bazén s ranným, obedným a večerným blokom.
 
     Čo blueprint rieši:
@@ -11,6 +13,7 @@ blueprint:
     - funguje aj bez helperov, ale s helpermi sa pohodlnejšie ovláda cez UI
   domain: automation
   author: Codex
+  source_url: https://github.com/denkz0ne/hassos-stuff/blob/main/blueprints/automation/animus/bazen_filtracia_dynamicka.yaml
   homeassistant:
     min_version: 2024.6.0
   input:
