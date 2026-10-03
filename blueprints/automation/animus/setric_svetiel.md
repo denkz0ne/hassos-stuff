@@ -1,6 +1,6 @@
 # Šetrič Svetiel
 
-> Aktuálna verzia: **1.1.1**
+> Aktuálna verzia: **1.1.2**
 
 Šetrič Svetiel je Home Assistant blueprint pre viac miestností v jednej automatizácii.
 Jeho úloha je jednoduchá: keď miestnosť zostane prázdna dostatočne dlho, vypne zvolené
@@ -34,7 +34,8 @@ v stave `off`.
 
 Hlavný vypínač konkrétneho bloku.
 
-Ak je vypnutý, Šetrič Svetiel túto miestnosť úplne ignoruje.
+Nová miestnosť sa vytvorí predvolene ako **aktívna**. Ak pravidlo vypneš, Šetrič Svetiel túto
+miestnosť úplne ignoruje.
 
 ### Senzory prítomnosti
 
@@ -47,7 +48,7 @@ Picker zámerne ponúka iba entity, ktoré dávajú pre prítomnosť zmysel:
 
 Môže ich byť viac. Stačí, aby jeden z nich hlásil `on`, a miestnosť sa považuje za obsadenú.
 
-Filtrovane sú iba možnosti v editore blueprintu. Runtime logika ostáva jednoduchá:
+Filtrované sú iba možnosti v editore blueprintu. Runtime logika ostáva jednoduchá:
 `on` znamená prítomnosť a `off` neprítomnosť.
 
 ### Zhasnúť po neprítomnosti
@@ -85,7 +86,7 @@ Vlastná akcia sa spustí **iba vtedy, keď Šetrič Svetiel vypína miestnosť 
 Ranné zhasnutie ju nikdy nespúšťa.
 
 Dynamické akcie vo vnútri opakovateľného objektu sa vykonávajú interným interpreterom.
-Verzia 1.1.1 podporuje:
+Verzia 1.1.2 podporuje:
 
 - bežné `action`/service kroky,
 - `target`,
@@ -122,6 +123,11 @@ Stav sa kontroluje:
 
 - každých 30 sekúnd,
 - okamžite po štarte Home Assistanta.
+
+30-sekundový kontrolný cyklus je zámerný. Pri dynamickom počte miestností v jednom `object`
+selectore je jednoduchší a predvídateľnejší než globálne počúvanie všetkých `state_changed`
+udalostí v Home Assistante. Timeout sa pritom stále počíta z reálneho `last_changed`, takže
+polling neurčuje začiatok neprítomnosti; iba okamih najbližšej kontroly.
 
 ### Reload automatizácií
 
@@ -176,6 +182,12 @@ Ranné zhasnutie sa dá prakticky otestovať až okolo reálneho východu slnka.
 možné dočasne nastaviť malý offset.
 
 ## Changelog
+
+### 1.1.2 — 2026-10-03
+
+- nové miestnosti majú `Aktívne pravidlo` predvolene zapnuté,
+- 30-sekundový kontrolný cyklus zostáva zámerne zachovaný,
+- runtime logika vypínania sa nemení.
 
 ### 1.1.1 — 2026-09-30
 
