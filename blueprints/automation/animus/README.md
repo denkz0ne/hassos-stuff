@@ -5,7 +5,7 @@ Home Assistant blueprinty v tomto priečinku:
 - `bazen_filtracia_dynamicka.yaml` — **v1.0.0**
 - `dvere_okna_kontakt_alert.yaml` — **v1.0.0**
 - `casove_signaly_multi_event.yaml` — **v1.0.0**
-- `setric_svetla.yaml` — **v1.1.3**
+- `setric_svetla.yaml` — **v1.2.0**
 
 ## Aktualizácie a verzovanie
 
@@ -113,7 +113,7 @@ Runtime interpreter podporuje:
 
 Vnorené `choose`, `if`, `repeat` a `parallel` zatiaľ nie sú podporované.
 
-## Šetrič Svetiel — v1.1.3
+## Šetrič Svetiel — v1.2.0
 
 `setric_svetla.yaml` je jedna blueprint automatizácia pre ľubovoľný počet miestností alebo
 samostatných pravidiel.
@@ -141,6 +141,8 @@ Základná logika:
 - `off` = neprítomnosť,
 - `unknown` / `unavailable` = nevypínať,
 - všetky senzory musia byť `off`,
+- timeout začne až pri súčasnej neprítomnosti a aktívnom cieli,
+- jeho začiatok je neskorší z momentu neprítomnosti a momentu aktivácie cieľa,
 - po timeout-e sa použije `homeassistant.turn_off`,
 - vlastná akcia sa vykoná iba pri neprítomnosti,
 - ranné zhasnutie je jednorazové OFF bez ďalšieho blokovania.
