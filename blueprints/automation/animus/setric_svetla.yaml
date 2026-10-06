@@ -1,7 +1,7 @@
 blueprint:
   name: "Šetrič Svetiel"
   description: |
-    **Version**: 1.1.3
+    **Version**: 1.2.0
 
     Jedna automatizácia pre viac miestností. Každá miestnosť si stráži vlastnú
     prítomnosť, čas nečinnosti a zariadenia, ktoré má po odchode vypnúť.
@@ -207,6 +207,20 @@ actions:
                   {% endif %}
                   {{ ns.latest }}
 
+                room_targets_active_started_ts: >-
+                  {% set ns = namespace(earliest=0) %}
+                  {% for entity_id in room_entities_to_turn_off %}
+                    {% set parts = entity_id.split('.', 1) %}
+                    {% if parts | count == 2 %}
+                      {% set entity = states[parts[0]][parts[1]] %}
+                      {% set changed = as_timestamp(entity.last_changed, 0) | float(0) %}
+                      {% if changed > 0 and (ns.earliest == 0 or changed < ns.earliest) %}
+                        {% set ns.earliest = changed %}
+                      {% endif %}
+                    {% endif %}
+                  {% endfor %}
+                  {{ ns.earliest }}
+
                 room_sunrise_target_ts: >-
                   {% if room_sunrise_enabled | bool(false) and sunrise_reference_ts | float(0) > 0 %}
                     {{ (sunrise_reference_ts | float(0)) + (room_sunrise_offset_seconds | float(0)) }}
@@ -215,9 +229,18 @@ actions:
                   {% endif %}
 
             - variables:
-                room_absence_elapsed: >-
-                  {% if (room_is_absent | bool(false)) and (room_absence_started_ts | float(0) > 0) %}
-                    {{ [0, current_ts | float(0) - (room_absence_started_ts | float(0))] | max }}
+                room_shutdown_elapsed: >-
+                  {% if
+                    (room_is_absent | bool(false))
+                    and (room_absence_started_ts | float(0) > 0)
+                    and (room_targets_active_started_ts | float(0) > 0)
+                    and (room_entities_to_turn_off | count > 0)
+                  %}
+                    {% set started = [
+                      room_absence_started_ts | float(0),
+                      room_targets_active_started_ts | float(0)
+                    ] | max %}
+                    {{ [0, current_ts | float(0) - started] | max }}
                   {% else %}
                     0
                   {% endif %}
@@ -226,7 +249,8 @@ actions:
                   {{
                     (room_is_absent | bool(false))
                     and (room_absence_started_ts | float(0) > 0)
-                    and ((room_absence_elapsed | float(0)) >= (room_timeout_seconds | float(0)))
+                    and (room_targets_active_started_ts | float(0) > 0)
+                    and ((room_shutdown_elapsed | float(0)) >= (room_timeout_seconds | float(0)))
                     and (room_entities_to_turn_off | count > 0)
                   }}
 
