@@ -1,6 +1,6 @@
 # Šetrič Svetiel
 
-> Aktuálna verzia: **1.1.3**
+> Aktuálna verzia: **1.2.0**
 
 Šetrič Svetiel je Home Assistant blueprint pre viac miestností v jednej automatizácii.
 Jeho úloha je jednoduchá: keď miestnosť zostane prázdna dostatočne dlho, vypne zvolené
@@ -73,10 +73,24 @@ Filtrované sú iba možnosti v editore blueprintu. Runtime logika ostáva jedno
 
 ### Zhasnúť po neprítomnosti
 
-Určuje, ako dlho musia všetky senzory hlásiť neprítomnosť.
+Timeout nezačne plynúť iba preto, že miestnosť je prázdna. Musia súčasne platiť dve podmienky:
 
-Za začiatok neprítomnosti sa berie najnovší `last_changed` zo zvolených senzorov, teda čas,
-keď do `off` prešiel posledný z nich.
+- všetky senzory prítomnosti hlásia `off`,
+- aspoň jeden cieľ na vypnutie je práve zapnutý alebo aktívny.
+
+Za začiatok odpočtu sa berie **neskorší** z dvoch okamihov:
+
+1. začiatok neprítomnosti — čas, keď do `off` prešiel posledný prítomnostný senzor,
+2. začiatok aktuálnej aktivity cieľa — `last_changed` aktuálne zapnutého cieľa.
+
+Prakticky to znamená:
+
+- ak svetlo svietilo už pri odchode z miestnosti, timeout sa ráta od odchodu,
+- ak je miestnosť prázdna už dlho a svetlo zapneš na diaľku až neskôr, dostane celý nastavený timeout,
+- po vypnutí a novom zapnutí počas stále trvajúcej neprítomnosti sa začne nový timeout; svetlo sa nezhasne pri najbližšom 30-sekundovom pollingu.
+
+Pri viacerých samostatných cieľoch sa vychádza z najstaršieho aktuálne aktívneho cieľa.
+Pri `light`/HA skupine jej `last_changed` prirodzene sleduje súvislý stav skupiny.
 
 Po uplynutí času sa vypnú iba cieľové entity, ktoré ešte nie sú `off`.
 
@@ -106,7 +120,7 @@ Vlastná akcia sa spustí **iba vtedy, keď Šetrič Svetiel vypína miestnosť 
 Ranné zhasnutie ju nikdy nespúšťa.
 
 Dynamické akcie vo vnútri opakovateľného objektu sa vykonávajú interným interpreterom.
-Verzia 1.1.3 podporuje:
+Verzia 1.2.0 podporuje:
 
 - bežné `action`/service kroky,
 - `target`,
@@ -146,8 +160,8 @@ Stav sa kontroluje:
 
 30-sekundový kontrolný cyklus je zámerný. Pri dynamickom počte miestností v jednom `object`
 selectore je jednoduchší a predvídateľnejší než globálne počúvanie všetkých `state_changed`
-udalostí v Home Assistante. Timeout sa pritom stále počíta z reálneho `last_changed`, takže
-polling neurčuje začiatok neprítomnosti; iba okamih najbližšej kontroly.
+udalostí v Home Assistante. Timeout sa pritom stále počíta z reálnych `last_changed` senzorov aj aktívnych cieľov. Polling teda
+neurčuje začiatok odpočtu; iba okamih najbližšej kontroly.
 
 ### Reload automatizácií
 
@@ -192,16 +206,26 @@ Na prvý test stačí jedna miestnosť:
 
 Over:
 
-1. senzor `on` -> nič sa nevypne,
-2. senzor `off` -> začne plynúť čas,
+1. svetlo `on`, senzor `on` -> nič sa neodpočítava,
+2. senzor prejde na `off` pri zapnutom svetle -> začne timeout,
 3. pred koncom znovu `on` -> vypnutie sa nekoná,
-4. znova `off` a počkaj 30 sekúnd -> lampa sa vypne a vykoná sa vlastná akcia,
-5. reloadni automatizácie počas odpočtu -> čas sa má dopočítať z `last_changed`.
+4. nechaj miestnosť dlhšie prázdnu so svetlom `off`, potom svetlo zapni na diaľku -> nesmie zhasnúť pri najbližšom pollingu; dostane celý timeout,
+5. po timeout-e -> lampa sa vypne a vykoná sa vlastná akcia,
+6. reloadni automatizácie počas odpočtu -> čas sa má dopočítať z aktuálnych `last_changed`.
 
 Ranné zhasnutie sa dá prakticky otestovať až okolo reálneho východu slnka. Na rýchly test je
 možné dočasne nastaviť malý offset.
 
 ## Changelog
+
+### 1.2.0 — 2026-10-06
+
+- timeout sa aktivuje až pri súčasnej neprítomnosti a aktívnom cieľovom zariadení,
+- začiatok odpočtu je neskorší z momentu neprítomnosti a momentu zapnutia/aktivácie cieľa,
+- svetlo zapnuté na diaľku počas dlhšej neprítomnosti dostane celý nastavený timeout,
+- nové zapnutie po predchádzajúcom zhasnutí počas rovnakej neprítomnosti spustí nový timeout namiesto okamžitého vypnutia pri ďalšom pollingu,
+- 30-sekundový polling zostáva iba kontrolným mechanizmom; neurčuje začiatok odpočtu,
+- ranné zhasnutie zostáva bez zmeny.
 
 ### 1.1.3 — 2026-10-03
 
