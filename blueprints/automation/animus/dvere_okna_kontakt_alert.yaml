@@ -27,7 +27,7 @@ blueprint:
       icon: mdi:eye-check
       description: |
         Pridaj jeden záznam pre každé okno, dvere, senzor alebo vypínač.
-        Vyber bežný stav zo zoznamu alebo zadaj vlastný stav senzora.
+        Vyber aktívny, neaktívny alebo nedostupný stav. Pre neštandardný senzor môžeš zadať vlastnú hodnotu.
         Každý záznam beží samostatne.
       input:
         monitors:
@@ -67,21 +67,13 @@ blueprint:
                       mode: dropdown
                       custom_value: true
                       options:
-                        - label: Zapnuté (on)
+                        - label: Zapnuté / aktívne
                           value: "on"
-                        - label: Vypnuté (off)
+                        - label: Vypnuté / neaktívne
                           value: "off"
-                        - label: Otvorené (open)
-                          value: "open"
-                        - label: Zatvorené (closed)
-                          value: "closed"
-                        - label: Áno (true)
-                          value: "true"
-                        - label: Nie (false)
-                          value: "false"
-                        - label: Nedostupné (unavailable)
+                        - label: Nedostupné
                           value: "unavailable"
-                        - label: Neznáme (unknown)
+                        - label: Neznáme
                           value: "unknown"
                 alert_after:
                   label: Začať upozorňovať po
