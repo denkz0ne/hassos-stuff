@@ -1,7 +1,7 @@
 blueprint:
   name: "AAS - Univerzálny sledovač stavu"
   description: |
-    **Version**: 2.0.1
+    **Version**: 2.1.0
 
     Jedna automatizácia môže sledovať ľubovoľný počet entít. Každý sledovač má
     vlastnú entitu, cieľový stav, odklad upozornenia, zvuk, interval a celkové
@@ -27,8 +27,8 @@ blueprint:
       icon: mdi:eye-check
       description: |
         Pridaj jeden záznam pre každé okno, dvere, senzor alebo vypínač.
-        Zadaj presný stav, na ktorý má sledovač reagovať (napr. on,
-        off, unavailable). Každý záznam beží samostatne.
+        Vyber bežný stav zo zoznamu alebo zadaj vlastný stav senzora.
+        Každý záznam beží samostatne.
       input:
         monitors:
           name: Sledované entity
@@ -63,7 +63,26 @@ blueprint:
                   label: Stav, na ktorý upozorňovať
                   required: true
                   selector:
-                    text: {}
+                    select:
+                      mode: dropdown
+                      custom_value: true
+                      options:
+                        - label: Zapnuté (on)
+                          value: "on"
+                        - label: Vypnuté (off)
+                          value: "off"
+                        - label: Otvorené (open)
+                          value: "open"
+                        - label: Zatvorené (closed)
+                          value: "closed"
+                        - label: Áno (true)
+                          value: "true"
+                        - label: Nie (false)
+                          value: "false"
+                        - label: Nedostupné (unavailable)
+                          value: "unavailable"
+                        - label: Neznáme (unknown)
+                          value: "unknown"
                 alert_after:
                   label: Začať upozorňovať po
                   required: true
@@ -89,6 +108,11 @@ blueprint:
                       multiple: true
                       filter:
                         - domain: media_player
+                entry_sound_enabled:
+                  label: Prehrať zvuk pri vstupe do sledovaného stavu
+                  default: true
+                  selector:
+                    boolean: {}
                 entry_sound:
                   label: Zvuk pri vstupe do sledovaného stavu
                   default: {}
@@ -96,8 +120,13 @@ blueprint:
                     media:
                       accept:
                         - audio/*
+                recovery_sound_enabled:
+                  label: Prehrať zvuk po zmene zo sledovaného stavu
+                  default: true
+                  selector:
+                    boolean: {}
                 recovery_sound:
-                  label: Zvuk po zmene zo sledovaného stavu
+                  label: Prehrať zvuk po zmene zo sledovaného stavu
                   default: {}
                   selector:
                     media:
@@ -250,7 +279,9 @@ action:
             monitor_repeat_interval_value: "{{ repeat.item.get('repeat_interval', {}) or {} }}"
             monitor_alert_duration_value: "{{ repeat.item.get('alert_duration', {}) or {} }}"
             monitor_players_value: "{{ repeat.item.get('media_players', []) or [] }}"
+            monitor_entry_sound_enabled_value: "{{ repeat.item.get('entry_sound_enabled', true) | bool(true) }}"
             monitor_entry_sound_value: "{{ repeat.item.get('entry_sound', {}) or {} }}"
+            monitor_recovery_sound_enabled_value: "{{ repeat.item.get('recovery_sound_enabled', true) | bool(true) }}"
             monitor_recovery_sound_value: "{{ repeat.item.get('recovery_sound', {}) or {} }}"
             monitor_alert_sound_enabled_value: "{{ repeat.item.get('alert_sound_enabled', true) | bool(true) }}"
             monitor_alert_sound_value: "{{ repeat.item.get('alert_sound', {}) or {} }}"
@@ -306,7 +337,7 @@ action:
                   sequence:
                     - if:
                         - condition: template
-                          value_template: "{{ monitor_entry_sound_value is mapping and monitor_entry_sound_value.media_content_id is defined and (monitor_players_value | count > 0) }}"
+                          value_template: "{{ monitor_entry_sound_enabled_value and monitor_entry_sound_value is mapping and monitor_entry_sound_value.media_content_id is defined and (monitor_players_value | count > 0) }}"
                       then:
                         - continue_on_error: true
                           action: media_player.play_media
@@ -440,7 +471,7 @@ action:
                   sequence:
                     - if:
                         - condition: template
-                          value_template: "{{ monitor_recovery_sound_value is mapping and monitor_recovery_sound_value.media_content_id is defined and (monitor_players_value | count > 0) }}"
+                          value_template: "{{ monitor_recovery_sound_enabled_value and monitor_recovery_sound_value is mapping and monitor_recovery_sound_value.media_content_id is defined and (monitor_players_value | count > 0) }}"
                       then:
                         - continue_on_error: true
                           action: media_player.play_media
