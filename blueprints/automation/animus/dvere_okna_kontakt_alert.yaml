@@ -1,11 +1,11 @@
 blueprint:
   name: "AAS - Univerzálny sledovač stavu"
   description: |
-    **Version**: 2.1.0
+    **Version**: 2.2.0
 
     Jedna automatizácia môže sledovať ľubovoľný počet entít. Každý sledovač má
     vlastnú entitu, cieľový stav, odklad upozornenia, zvuk, interval a celkové
-    trvanie upozorňovania. Podporované sú binary_sensor, switch, light a sensor
+    trvanie upozorňovania. Podporované sú binary_sensor, switch, input_boolean, light a sensor
     vrátane stavov unavailable/unknown.
 
     AAS eventy sa posielajú na MQTT tému aas/udalost. Telegram aj ďalšie akcie
@@ -113,18 +113,34 @@ blueprint:
                     media:
                       accept:
                         - audio/*
+                entry_sound_volume:
+                  label: Hlasitosť zvuku pri vstupe
+                  selector:
+                    number:
+                      min: 0
+                      max: 1
+                      step: 0.05
+                      mode: slider
                 recovery_sound_enabled:
                   label: Prehrať zvuk po zmene zo sledovaného stavu
                   default: true
                   selector:
                     boolean: {}
                 recovery_sound:
-                  label: Prehrať zvuk po zmene zo sledovaného stavu
+                  label: Zvuk pri návrate zo sledovaného stavu
                   default: {}
                   selector:
                     media:
                       accept:
                         - audio/*
+                recovery_sound_volume:
+                  label: Hlasitosť zvuku pri návrate
+                  selector:
+                    number:
+                      min: 0
+                      max: 1
+                      step: 0.05
+                      mode: slider
                 alert_sound_enabled:
                   label: Opakovať zvuk počas upozorňovania
                   default: true
@@ -138,7 +154,7 @@ blueprint:
                       accept:
                         - audio/*
                 sound_volume:
-                  label: Hlasitosť
+                  label: Hlasitosť opakovaného upozornenia
                   default: 0.7
                   selector:
                     number:
@@ -278,6 +294,8 @@ action:
             monitor_recovery_sound_value: "{{ repeat.item.get('recovery_sound', {}) or {} }}"
             monitor_alert_sound_enabled_value: "{{ repeat.item.get('alert_sound_enabled', true) | bool(true) }}"
             monitor_alert_sound_value: "{{ repeat.item.get('alert_sound', {}) or {} }}"
+            monitor_entry_volume_value: "{{ repeat.item.get('entry_sound_volume', -1) | float(-1) }}"
+            monitor_recovery_volume_value: "{{ repeat.item.get('recovery_sound_volume', -1) | float(-1) }}"
             monitor_sound_volume_value: "{{ repeat.item.get('sound_volume', 0.7) | float(0.7) }}"
             monitor_aas_start_value: "{{ repeat.item.get('aas_start_event', 'none') }}"
             monitor_aas_cleared_value: "{{ repeat.item.get('aas_cleared_event', 'none') }}"
@@ -332,6 +350,16 @@ action:
                         - condition: template
                           value_template: "{{ monitor_entry_sound_enabled_value and monitor_entry_sound_value is mapping and monitor_entry_sound_value.media_content_id is defined and (monitor_players_value | count > 0) }}"
                       then:
+                        - if:
+                            - condition: template
+                              value_template: "{{ monitor_entry_volume_value | float(-1) >= 0 }}"
+                          then:
+                            - continue_on_error: true
+                              action: media_player.volume_set
+                              target:
+                                entity_id: "{{ monitor_players_value }}"
+                              data:
+                                volume_level: "{{ monitor_entry_volume_value }}"
                         - continue_on_error: true
                           action: media_player.play_media
                           target:
@@ -466,6 +494,16 @@ action:
                         - condition: template
                           value_template: "{{ monitor_recovery_sound_enabled_value and monitor_recovery_sound_value is mapping and monitor_recovery_sound_value.media_content_id is defined and (monitor_players_value | count > 0) }}"
                       then:
+                        - if:
+                            - condition: template
+                              value_template: "{{ monitor_recovery_volume_value | float(-1) >= 0 }}"
+                          then:
+                            - continue_on_error: true
+                              action: media_player.volume_set
+                              target:
+                                entity_id: "{{ monitor_players_value }}"
+                              data:
+                                volume_level: "{{ monitor_recovery_volume_value }}"
                         - continue_on_error: true
                           action: media_player.play_media
                           target:
