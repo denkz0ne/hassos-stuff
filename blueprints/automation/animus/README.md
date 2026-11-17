@@ -35,22 +35,26 @@ Podporuje režimy:
 - `Standard`,
 - `Intenzívny`.
 
-## Dvere / okno — kontakt, zvuk a opakovaný alert
+## Univerzálny sledovač stavu — v2.0.0
 
-`dvere_okna_kontakt_alert.yaml` je univerzálny blueprint pre jeden kontaktný senzor.
+`dvere_okna_kontakt_alert.yaml` je jeden blueprint pre ľubovoľný počet nezávislých sledovačov.
 
-Podporuje:
+Každý záznam má vlastné:
 
-- jeden `binary_sensor` na inštanciu,
-- externý `timer` viditeľný aj na dashboarde,
-- senzory typu dvere a okno,
-- zvuky cez Home Assistant media picker,
-- jeden alebo viac `media_player`,
-- mobilné notifikácie cez Action selector,
-- jednorazový mobilný alert pri zabudnutom otvorení,
-- opakovaný zvuk alertu,
-- obnovenie pôvodnej hlasitosti prehrávačov,
-- nočný režim s vlastným časom.
+- entitu z domén `binary_sensor`, `switch`, `light` alebo `sensor`,
+- cieľový stav vrátane `unknown` alebo `unavailable`,
+- odklad pred začiatkom upozorňovania (0 = okamžite),
+- media playery a zvuky pri vstupe, počas upozorňovania a po zmene stavu,
+- interval opakovania zvuku a celkový čas upozorňovania,
+- voliteľné AAS eventy pri začiatku, zmene stavu a vypršaní času.
+
+Telegram a vlastné akcie sa nastavujú v troch spoločných Action poliach: začiatok,
+zmena sledovaného stavu a uplynutie celkového času. Akcie môžu používať
+`monitor_name_value` a `monitor_state_value`, aby správa pomenovala konkrétny
+záznam. Každý sledovač beží nezávisle; ukončenie jedného nemení ostatné.
+
+Blueprint počúva udalosti zmeny stavu HA a v akciách spracuje iba zvolené entity.
+Pre import použi stabilnú URL na `main` z metadát blueprintu.
 
 ## Časové znamenia (BETA)
 
