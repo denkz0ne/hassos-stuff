@@ -1,7 +1,7 @@
 blueprint:
   name: "AAS - Univerzálny sledovač stavu"
   description: |
-    **Version**: 2.0.0
+    **Version**: 2.0.1
 
     Jedna automatizácia môže sledovať ľubovoľný počet entít. Každý sledovač má
     vlastnú entitu, cieľový stav, odklad upozornenia, zvuk, interval a celkové
@@ -12,6 +12,9 @@ blueprint:
     sa nastavujú v spoločných action poliach; texty môžu používať premenné
     monitor_name_value a monitor_state_value. Každý sledovač sa spracúva
     nezávisle. Zmena entity ukončí iba jej vlastný cyklus.
+
+    Ochranná podmienka pred akciami prepúšťa iba zmenu hlavného stavu sledovanej
+    entity; ostatné HA state_changed udalosti a zmeny atribútov sa zahodia.
   domain: automation
   author: denkz0ne
   source_url: https://github.com/denkz0ne/hassos-stuff/blob/main/blueprints/automation/animus/dvere_okna_kontakt_alert.yaml
@@ -208,7 +211,28 @@ trigger:
     event: start
     id: homeassistant_start
 
-condition: []
+trigger_variables:
+  monitor_rules_for_filter: !input monitors
+
+condition:
+  - condition: template
+    value_template: >-
+      {% set ns = namespace(entities=[]) %}
+      {% for monitor in monitor_rules_for_filter %}
+        {% if monitor.get('enabled', true) %}
+          {% set ns.entities = ns.entities + [monitor.get('entity', '')] %}
+        {% endif %}
+      {% endfor %}
+      {% if trigger.id == 'homeassistant_start' %}
+        {{ ns.entities | count > 0 }}
+      {% else %}
+        {{
+          trigger.event.data.entity_id in ns.entities
+          and trigger.event.data.old_state is not none
+          and trigger.event.data.new_state is not none
+          and trigger.event.data.old_state.state != trigger.event.data.new_state.state
+        }}
+      {% endif %}
 
 variables:
   monitor_rules: !input monitors
