@@ -3,7 +3,7 @@
 Home Assistant blueprinty v tomto priečinku:
 
 - `bazen_filtracia_dynamicka.yaml` — **v1.0.0**
-- `dvere_okna_kontakt_alert.yaml` — **v2.1.0**
+- `dvere_okna_kontakt_alert.yaml` — **v2.2.0**
 - `casove_signaly_multi_event.yaml` — **v1.0.0**
 - `setric_svetla.yaml` — **v1.2.0**
 
@@ -35,7 +35,7 @@ Podporuje režimy:
 - `Standard`,
 - `Intenzívny`.
 
-## Univerzálny sledovač stavu — v2.1.0
+## Univerzálny sledovač stavu — v2.2.0
 
 `dvere_okna_kontakt_alert.yaml` je jeden blueprint pre ľubovoľný počet nezávislých sledovačov.
 
@@ -46,6 +46,7 @@ Každý záznam má vlastné:
 - entitu z domén `binary_sensor`, `switch`, `input_boolean`, `light` alebo `sensor`,
 - odklad pred začiatkom upozorňovania (0 = okamžite),
 - media playery a zvuky pri vstupe, počas upozorňovania a po zmene stavu,
+- samostatnú hlasitosť zvuku pri vstupe, návrate a opakovaní; nastavenie hlasitosti pri vstupe a návrate zostane na prehrávači po prehraní,
 - interval opakovania zvuku a celkový čas upozorňovania,
 - voliteľné AAS eventy pri začiatku, zmene stavu a vypršaní času.
 
