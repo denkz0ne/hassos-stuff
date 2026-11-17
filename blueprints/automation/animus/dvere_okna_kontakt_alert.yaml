@@ -57,6 +57,7 @@ blueprint:
                       filter:
                         - domain: binary_sensor
                         - domain: switch
+                        - domain: input_boolean
                         - domain: light
                         - domain: sensor
                 target_state:
