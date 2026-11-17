@@ -1,551 +1,431 @@
 blueprint:
-  name: Dvere/okno - kontakt, zvuk a opakovany alert
+  name: "AAS - Univerzálny sledovač stavu"
   description: |
-    **Version**: 1.0.0
+    **Version**: 2.0.0
 
-    Univerzalny blueprint pre jeden kontaktovy senzor dveri alebo okna.
+    Jedna automatizácia môže sledovať ľubovoľný počet entít. Každý sledovač má
+    vlastnú entitu, cieľový stav, odklad upozornenia, zvuk, interval a celkové
+    trvanie upozorňovania. Podporované sú binary_sensor, switch, light a sensor
+    vrátane stavov unavailable/unknown.
 
-    Jedna instancia blueprintu ovlada jeden binary_sensor a jeden externy timer.
-    Timer je povinny vstup, aby bol priebeh alertu viditelny aj na dashboarde.
-
-    Blueprint podporuje zvuk pri otvoreni/zatvoreni, oneskoreny alert, opakovanie
-    zvuku az do zatvorenia, nocny rezim a jednorazove mobilne notifikacie.
+    AAS eventy sa posielajú na MQTT tému aas/udalost. Telegram aj ďalšie akcie
+    sa nastavujú v spoločných action poliach; texty môžu používať premenné
+    monitor_name_value a monitor_state_value. Každý sledovač sa spracúva
+    nezávisle. Zmena entity ukončí iba jej vlastný cyklus.
   domain: automation
-  author: Codex
+  author: denkz0ne
   source_url: https://github.com/denkz0ne/hassos-stuff/blob/main/blueprints/automation/animus/dvere_okna_kontakt_alert.yaml
   homeassistant:
     min_version: 2024.6.0
+
   input:
-    core_section:
-      name: Zaklad
-      icon: mdi:door-open
-      description: Hlavne entity pre jednu instanciu dveri alebo okna.
-      input:
-        contact_sensor:
-          name: Kontaktovy senzor
-          description: "Zobrazuju sa iba binary_sensor entity s device_class `door` alebo `window`."
-          selector:
-            entity:
-              filter:
-                - domain: binary_sensor
-                  device_class: door
-                - domain: binary_sensor
-                  device_class: window
-
-        contact_name:
-          name: Nazov v spravach
-          description: Ludsky nazov pouzity v notifikaciach a pomocnych akciach.
-          default: Dvere
-          selector:
-            text: {}
-
-        reminder_timer:
-          name: Timer pre tento kontakt
-          description: Samostatny externy timer pre tuto instanciu blueprintu. Nepouzivaj rovnaky timer vo viacerych instanciach.
-          selector:
-            entity:
-              domain: timer
-
-        open_state:
-          name: Stav otvorene
-          default: "on"
-          selector:
-            select:
-              mode: dropdown
-              options:
-                - "on"
-                - "off"
-
-        closed_state:
-          name: Stav zatvorene
-          default: "off"
-          selector:
-            select:
-              mode: dropdown
-              options:
-                - "off"
-                - "on"
-
-    timing_section:
-      name: Casovanie
-      icon: mdi:timer-outline
-      description: Cas do prveho alertu a interval opakovania zvuku.
-      input:
-        alert_after:
-          name: Alert po
-          description: Po akom case otvorenia sa spusti zabudnute otvorenie.
-          default:
-            hours: 0
-            minutes: 1
-            seconds: 0
-          selector:
-            duration: {}
-
-        repeat_interval:
-          name: Interval opakovania zvuku
-          description: Ako casto sa ma opakovat zvuk alertu, kym je kontakt stale otvoreny.
-          default:
-            hours: 0
-            minutes: 0
-            seconds: 10
-          selector:
-            duration: {}
-
-        max_repeats:
-          name: Maximalny pocet opakovani zvuku
-          description: "`0` znamena opakovat zvuk az do zatvorenia."
-          default: 0
-          selector:
-            number:
-              min: 0
-              max: 100
-              step: 1
-              mode: box
-
-    sound_section:
-      name: Zvuky
-      icon: mdi:volume-high
-      description: Zvuky sa vyberaju cez media picker a prehravaju cez jeden alebo viac media playerov.
-      input:
-        media_players:
-          name: Media playery
-          description: Jeden alebo viac prehravacov pre zvuk otvorenia, zatvorenia a alertu.
-          selector:
-            entity:
-              multiple: true
-              filter:
-                - domain: media_player
-
-        open_sound_enabled:
-          name: Zvuk pri otvoreni
-          default: true
-          selector:
-            boolean: {}
-
-        open_sound:
-          name: Subor zvuku otvorenia
-          description: Vyber audio subor cez media picker.
-          default: {}
-          selector:
-            media:
-              accept:
-                - audio/*
-
-        open_volume:
-          name: Hlasitost otvorenia
-          default: 0.7
-          selector:
-            number:
-              min: 0
-              max: 1
-              step: 0.05
-              mode: slider
-
-        close_sound_enabled:
-          name: Zvuk pri zatvoreni
-          default: true
-          selector:
-            boolean: {}
-
-        close_sound:
-          name: Subor zvuku zatvorenia
-          description: Vyber audio subor cez media picker. Moze byt rovnaky ako zvuk otvorenia.
-          default: {}
-          selector:
-            media:
-              accept:
-                - audio/*
-
-        close_volume:
-          name: Hlasitost zatvorenia
-          default: 0.7
-          selector:
-            number:
-              min: 0
-              max: 1
-              step: 0.05
-              mode: slider
-
-        alert_sound_enabled:
-          name: Alert zvuk
-          default: true
-          selector:
-            boolean: {}
-
-        alert_sound:
-          name: Subor zvuku alertu
-          description: Vyber audio subor prehravany po dobehnuti timeru a potom periodicky.
-          default: {}
-          selector:
-            media:
-              accept:
-                - audio/*
-
-        alert_volume:
-          name: Hlasitost alertu
-          description: Po skonceni alertu sa povodna hlasitost media playerov obnovi.
-          default: 0.85
-          selector:
-            number:
-              min: 0
-              max: 1
-              step: 0.05
-              mode: slider
-
-    night_section:
-      name: Nocny rezim
-      icon: mdi:weather-night
-      collapsed: true
-      description: Casove okno, v ktorom mozes potlacit zvuky alebo povolit len mobilne akcie.
-      input:
-        night_mode_enabled:
-          name: Zapnut nocny rezim
-          default: false
-          selector:
-            boolean: {}
-
-        night_start:
-          name: Noc od
-          default: "22:00:00"
-          selector:
-            time: {}
-
-        night_end:
-          name: Noc do
-          default: "06:00:00"
-          selector:
-            time: {}
-
-        night_sound_enabled:
-          name: Hrat zvuky aj v noci
-          default: false
-          selector:
-            boolean: {}
-
-        night_mobile_actions_enabled:
-          name: Spustat mobilne akcie v noci
-          default: true
-          selector:
-            boolean: {}
-
-        night_alert_volume:
-          name: Hlasitost alertu v noci
-          default: 0.35
-          selector:
-            number:
-              min: 0
-              max: 1
-              step: 0.05
-              mode: slider
-
-    mobile_section:
-      name: Mobilne notifikacie
-      icon: mdi:cellphone-message
-      collapsed: true
+    monitors_section:
+      name: Sledovače
+      icon: mdi:eye-check
       description: |
-        Pouzi action picker a vyber si notify sluzbu priamo v UI.
-        Alert akcie sa spustia iba raz pri zabudnutom otvoreni.
-        Periodicky sa opakuje iba zvuk alertu.
+        Pridaj jeden záznam pre každé okno, dvere, senzor alebo vypínač.
+        Zadaj presný stav, na ktorý má sledovač reagovať (napr. on,
+        off, unavailable). Každý záznam beží samostatne.
       input:
-        mobile_open_actions_enabled:
-          name: Mobilna akcia pri otvoreni
-          default: false
-          selector:
-            boolean: {}
-
-        mobile_open_actions:
-          name: Akcie pri otvoreni
+        monitors:
+          name: Sledované entity
+          description: Pridaj ľubovoľný počet nezávislých sledovačov.
           default: []
           selector:
-            action: {}
-
-        mobile_close_actions_enabled:
-          name: Mobilna akcia pri zatvoreni
-          default: false
-          selector:
-            boolean: {}
-
-        mobile_close_actions:
-          name: Akcie pri zatvoreni
-          default: []
-          selector:
-            action: {}
-
-        mobile_alert_actions_enabled:
-          name: Mobilna akcia pri zabudnutom otvoreni
-          description: Spusti sa iba raz, ked dobehne timer a kontakt je stale otvoreny.
-          default: true
-          selector:
-            boolean: {}
-
-        mobile_alert_actions:
-          name: Akcie pri zabudnutom otvoreni
-          default: []
-          selector:
-            action: {}
-
-        mobile_closed_after_alert_actions_enabled:
-          name: Mobilna akcia po zatvoreni po alerte
-          default: true
-          selector:
-            boolean: {}
-
-        mobile_closed_after_alert_actions:
-          name: Akcie po zatvoreni po alerte
-          default: []
-          selector:
-            action: {}
+            object:
+              multiple: true
+              label_field: name
+              fields:
+                enabled:
+                  label: Aktívny
+                  required: true
+                  selector:
+                    boolean: {}
+                name:
+                  label: Názov sledovača
+                  required: true
+                  selector:
+                    text: {}
+                entity:
+                  label: Sledovaná entita
+                  required: true
+                  selector:
+                    entity:
+                      filter:
+                        - domain: binary_sensor
+                        - domain: switch
+                        - domain: light
+                        - domain: sensor
+                target_state:
+                  label: Stav, na ktorý upozorňovať
+                  required: true
+                  selector:
+                    text: {}
+                alert_after:
+                  label: Začať upozorňovať po
+                  required: true
+                  selector:
+                    duration:
+                      enable_second: true
+                repeat_interval:
+                  label: Interval zvukového upozornenia
+                  required: true
+                  selector:
+                    duration:
+                      enable_second: true
+                alert_duration:
+                  label: Celkový čas upozorňovania
+                  required: true
+                  selector:
+                    duration:
+                      enable_second: true
+                media_players:
+                  label: Media playery
+                  selector:
+                    entity:
+                      multiple: true
+                      filter:
+                        - domain: media_player
+                entry_sound:
+                  label: Zvuk pri vstupe do sledovaného stavu
+                  default: {}
+                  selector:
+                    media:
+                      accept:
+                        - audio/*
+                recovery_sound:
+                  label: Zvuk po zmene zo sledovaného stavu
+                  default: {}
+                  selector:
+                    media:
+                      accept:
+                        - audio/*
+                alert_sound_enabled:
+                  label: Opakovať zvuk počas upozorňovania
+                  default: true
+                  selector:
+                    boolean: {}
+                alert_sound:
+                  label: Zvuk opakovaného upozornenia
+                  default: {}
+                  selector:
+                    media:
+                      accept:
+                        - audio/*
+                sound_volume:
+                  label: Hlasitosť
+                  default: 0.7
+                  selector:
+                    number:
+                      min: 0
+                      max: 1
+                      step: 0.05
+                      mode: slider
+                aas_start_event:
+                  label: AAS event pri začiatku upozorňovania
+                  default: upozornenie
+                  selector:
+                    select:
+                      mode: dropdown
+                      options:
+                        - none
+                        - ping
+                        - pohyb
+                        - zvoncek
+                        - sprava
+                        - upozornenie
+                        - chyba
+                        - uspech
+                        - informacia
+                        - pripomienka
+                aas_cleared_event:
+                  label: AAS event po zmene stavu
+                  default: uspech
+                  selector:
+                    select:
+                      mode: dropdown
+                      options:
+                        - none
+                        - ping
+                        - pohyb
+                        - zvoncek
+                        - sprava
+                        - upozornenie
+                        - chyba
+                        - uspech
+                        - informacia
+                        - pripomienka
+                aas_timeout_event:
+                  label: AAS event po vypršaní času
+                  default: chyba
+                  selector:
+                    select:
+                      mode: dropdown
+                      options:
+                        - none
+                        - ping
+                        - pohyb
+                        - zvoncek
+                        - sprava
+                        - upozornenie
+                        - chyba
+                        - uspech
+                        - informacia
+                        - pripomienka
 
     actions_section:
-      name: Doplnkove akcie
-      icon: mdi:gesture-tap-button
-      collapsed: true
-      description: Doplnkove akcie pre pokrocile pouzitie bez upravy blueprintu.
+      name: Telegram a vlastné akcie
+      icon: mdi:message-text
+      description: |
+        Akcie sú spoločné pre všetky sledovače. Vlož do každej časti natívne
+        Home Assistant actions, napríklad notify.send_message. V správach môžeš
+        použiť {{ monitor_name_value }} a {{ monitor_state_value }}.
       input:
-        open_actions:
-          name: Akcie pri otvoreni
+        alert_started_actions:
+          name: Akcie pri začiatku upozorňovania
+          description: Spustia sa po odklade, len ak entita stále má cieľový stav.
           default: []
           selector:
             action: {}
-
-        close_actions:
-          name: Akcie pri zatvoreni
+        state_cleared_actions:
+          name: Akcie keď sa sledovaný stav zmení
+          description: Spustia sa, ak sa stav zmení pred uplynutím celkového času.
           default: []
           selector:
             action: {}
-
-        alert_repeat_actions:
-          name: Akcie pri kazdom opakovani alertu
+        alert_timeout_actions:
+          name: Akcie po uplynutí celkového času
+          description: Spustia sa, ak cieľový stav pretrvá celý čas upozorňovania.
           default: []
           selector:
             action: {}
-
-        closed_after_alert_actions:
-          name: Akcie po zatvoreni po alerte
-          default: []
-          selector:
-            action: {}
-
-mode: parallel
-max: 10
-max_exceeded: silent
-
-variables:
-  contact_sensor_entity: !input contact_sensor
-  contact_name_value: !input contact_name
-  media_players_value: !input media_players
-  open_state_value: !input open_state
-  closed_state_value: !input closed_state
-  max_repeats_value: !input max_repeats
-
-  open_sound_enabled_value: !input open_sound_enabled
-  open_sound_value: !input open_sound
-  close_sound_enabled_value: !input close_sound_enabled
-  close_sound_value: !input close_sound
-  alert_sound_enabled_value: !input alert_sound_enabled
-  alert_sound_value: !input alert_sound
-
-  night_mode_enabled_value: !input night_mode_enabled
-  night_start_value: !input night_start
-  night_end_value: !input night_end
-  night_sound_enabled_value: !input night_sound_enabled
-  night_mobile_actions_enabled_value: !input night_mobile_actions_enabled
-  night_alert_volume_value: !input night_alert_volume
-  alert_volume_value: !input alert_volume
-
-  mobile_open_actions_enabled_value: !input mobile_open_actions_enabled
-  mobile_close_actions_enabled_value: !input mobile_close_actions_enabled
-  mobile_alert_actions_enabled_value: !input mobile_alert_actions_enabled
-  mobile_closed_after_alert_actions_enabled_value: !input mobile_closed_after_alert_actions_enabled
-
-  is_night: >-
-    {% set now_time = now().strftime('%H:%M:%S') %}
-    {% if not night_mode_enabled_value %}
-      false
-    {% elif night_start_value < night_end_value %}
-      {{ night_start_value <= now_time < night_end_value }}
-    {% else %}
-      {{ now_time >= night_start_value or now_time < night_end_value }}
-    {% endif %}
-
-  sound_allowed: "{{ (not (is_night | bool(false))) or night_sound_enabled_value }}"
-  mobile_allowed: "{{ (not (is_night | bool(false))) or night_mobile_actions_enabled_value }}"
-  current_alert_volume: "{{ night_alert_volume_value if (is_night | bool(false)) else alert_volume_value }}"
 
 trigger:
-  - platform: state
-    entity_id: !input contact_sensor
-    from: !input closed_state
-    to: !input open_state
-    id: opened
-
-  - platform: state
-    entity_id: !input contact_sensor
-    from: !input open_state
-    to: !input closed_state
-    id: closed
-
   - platform: event
-    event_type: timer.finished
-    event_data:
-      entity_id: !input reminder_timer
-    id: timer_finished
+    event_type: state_changed
+    id: entity_state_changed
+  - platform: homeassistant
+    event: start
+    id: homeassistant_start
 
 condition: []
 
+variables:
+  monitor_rules: !input monitors
+
 action:
-  - choose:
-      - conditions:
-          - condition: trigger
-            id: opened
-        sequence:
-          - if:
-              - condition: template
-                value_template: >-
-                  {{
-                    sound_allowed
-                    and open_sound_enabled_value
-                    and open_sound_value is mapping
-                    and open_sound_value.media_content_id is defined
-                  }}
-            then:
-              - action: media_player.volume_set
-                target:
-                  entity_id: !input media_players
-                data:
-                  volume_level: !input open_volume
-              - action: media_player.play_media
-                target:
-                  entity_id: !input media_players
-                data:
-                  media_content_id: "{{ open_sound_value.media_content_id }}"
-                  media_content_type: "{{ open_sound_value.media_content_type }}"
+  - repeat:
+      for_each: "{{ monitor_rules }}"
+      sequence:
+        - variables:
+            monitor_enabled_value: "{{ repeat.item.get('enabled', true) | bool(true) }}"
+            monitor_name_value: "{{ repeat.item.get('name', 'Sledovač') }}"
+            monitor_entity_value: "{{ repeat.item.get('entity', '') }}"
+            monitor_state_value: "{{ repeat.item.get('target_state', 'on') | string }}"
+            monitor_alert_after_value: "{{ repeat.item.get('alert_after', {}) or {} }}"
+            monitor_repeat_interval_value: "{{ repeat.item.get('repeat_interval', {}) or {} }}"
+            monitor_alert_duration_value: "{{ repeat.item.get('alert_duration', {}) or {} }}"
+            monitor_players_value: "{{ repeat.item.get('media_players', []) or [] }}"
+            monitor_entry_sound_value: "{{ repeat.item.get('entry_sound', {}) or {} }}"
+            monitor_recovery_sound_value: "{{ repeat.item.get('recovery_sound', {}) or {} }}"
+            monitor_alert_sound_enabled_value: "{{ repeat.item.get('alert_sound_enabled', true) | bool(true) }}"
+            monitor_alert_sound_value: "{{ repeat.item.get('alert_sound', {}) or {} }}"
+            monitor_sound_volume_value: "{{ repeat.item.get('sound_volume', 0.7) | float(0.7) }}"
+            monitor_aas_start_value: "{{ repeat.item.get('aas_start_event', 'none') }}"
+            monitor_aas_cleared_value: "{{ repeat.item.get('aas_cleared_event', 'none') }}"
+            monitor_aas_timeout_value: "{{ repeat.item.get('aas_timeout_event', 'none') }}"
+            monitor_alert_after_seconds: >-
+              {{
+                (monitor_alert_after_value.get('hours', 0) | int(0)) * 3600
+                + (monitor_alert_after_value.get('minutes', 0) | int(0)) * 60
+                + (monitor_alert_after_value.get('seconds', 0) | int(0))
+              }}
+            monitor_repeat_interval_seconds: >-
+              {{
+                [
+                  (monitor_repeat_interval_value.get('hours', 0) | int(0)) * 3600
+                  + (monitor_repeat_interval_value.get('minutes', 0) | int(0)) * 60
+                  + (monitor_repeat_interval_value.get('seconds', 0) | int(0)),
+                  1
+                ] | max
+              }}
+            monitor_alert_duration_seconds: >-
+              {{
+                [
+                  (monitor_alert_duration_value.get('hours', 0) | int(0)) * 3600
+                  + (monitor_alert_duration_value.get('minutes', 0) | int(0)) * 60
+                  + (monitor_alert_duration_value.get('seconds', 0) | int(0)),
+                  1
+                ] | max
+              }}
 
-          - if:
-              - condition: template
-                value_template: "{{ mobile_allowed and mobile_open_actions_enabled_value }}"
-            then: !input mobile_open_actions
-
-          - sequence: !input open_actions
-
-          - action: timer.start
-            target:
-              entity_id: !input reminder_timer
-            data:
-              duration: !input alert_after
-
-      - conditions:
-          - condition: trigger
-            id: closed
-        sequence:
-          - action: timer.cancel
-            target:
-              entity_id: !input reminder_timer
-
-          - if:
-              - condition: template
-                value_template: >-
-                  {{
-                    sound_allowed
-                    and close_sound_enabled_value
-                    and close_sound_value is mapping
-                    and close_sound_value.media_content_id is defined
-                  }}
-            then:
-              - action: media_player.volume_set
-                target:
-                  entity_id: !input media_players
-                data:
-                  volume_level: !input close_volume
-              - action: media_player.play_media
-                target:
-                  entity_id: !input media_players
-                data:
-                  media_content_id: "{{ close_sound_value.media_content_id }}"
-                  media_content_type: "{{ close_sound_value.media_content_type }}"
-
-          - if:
-              - condition: template
-                value_template: "{{ mobile_allowed and mobile_close_actions_enabled_value }}"
-            then: !input mobile_close_actions
-
-          - sequence: !input close_actions
-
-      - conditions:
-          - condition: trigger
-            id: timer_finished
-          - condition: template
-            value_template: "{{ is_state(contact_sensor_entity, open_state_value) }}"
-        sequence:
-          - variables:
-              original_volumes: >-
-                {% set ns = namespace(items=[]) %}
-                {% for player in media_players_value %}
-                  {% set ns.items = ns.items + [dict(entity_id=player, volume=state_attr(player, 'volume_level') | float(0.5))] %}
-                {% endfor %}
-                {{ ns.items }}
-
-          - if:
-              - condition: template
-                value_template: "{{ mobile_allowed and mobile_alert_actions_enabled_value }}"
-            then: !input mobile_alert_actions
-
-          - repeat:
-              while:
-                - condition: template
-                  value_template: >-
-                    {{
-                      is_state(contact_sensor_entity, open_state_value)
-                      and (
-                        max_repeats_value | int(0) == 0
-                        or repeat.index <= max_repeats_value | int(0)
-                      )
-                    }}
-              sequence:
-                - if:
+        - if:
+            - condition: template
+              value_template: "{{ monitor_enabled_value and monitor_entity_value != '' }}"
+            - condition: template
+              value_template: >-
+                {{
+                  (trigger.id == 'entity_state_changed'
+                    and trigger.event.data.entity_id == monitor_entity_value
+                    and trigger.event.data.old_state is not none
+                    and trigger.event.data.new_state is not none
+                    and trigger.event.data.old_state.state != trigger.event.data.new_state.state)
+                  or
+                  (trigger.id == 'homeassistant_start'
+                    and is_state(monitor_entity_value, monitor_state_value))
+                }}
+          then:
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: "{{ is_state(monitor_entity_value, monitor_state_value) }}"
+                  sequence:
+                    - if:
+                        - condition: template
+                          value_template: "{{ monitor_entry_sound_value is mapping and monitor_entry_sound_value.media_content_id is defined and (monitor_players_value | count > 0) }}"
+                      then:
+                        - continue_on_error: true
+                          action: media_player.play_media
+                          target:
+                            entity_id: "{{ monitor_players_value }}"
+                          data:
+                            media_content_id: "{{ monitor_entry_sound_value.media_content_id }}"
+                            media_content_type: "{{ monitor_entry_sound_value.media_content_type }}"
+                    - if:
+                        - condition: template
+                          value_template: "{{ monitor_alert_after_seconds | int(0) > 0 }}"
+                      then:
+                        - wait_template: "{{ not is_state(monitor_entity_value, monitor_state_value) }}"
+                          timeout:
+                            seconds: "{{ monitor_alert_after_seconds | int(0) }}"
+                          continue_on_timeout: true
+                    - if:
+                        - condition: template
+                          value_template: "{{ is_state(monitor_entity_value, monitor_state_value) }}"
+                      then:
+                        - variables:
+                            monitor_alert_started_ts: "{{ as_timestamp(now()) | float(0) }}"
+                            monitor_original_volumes: >-
+                              {% set ns = namespace(items=[]) %}
+                              {% for player in monitor_players_value %}
+                                {% set ns.items = ns.items + [dict(entity_id=player, volume=state_attr(player, 'volume_level') | float(0.5))] %}
+                              {% endfor %}
+                              {{ ns.items }}
+                        - if:
+                            - condition: template
+                              value_template: "{{ monitor_aas_start_value != 'none' }}"
+                          then:
+                            - continue_on_error: true
+                              action: mqtt.publish
+                              data:
+                                topic: aas/udalost
+                                payload: "{{ monitor_aas_start_value }}"
+                                qos: 1
+                                retain: false
+                        - sequence: !input alert_started_actions
+                        - repeat:
+                            while:
+                              - condition: template
+                                value_template: >-
+                                  {{
+                                    is_state(monitor_entity_value, monitor_state_value)
+                                    and (as_timestamp(now()) - (monitor_alert_started_ts | float(0))) < (monitor_alert_duration_seconds | int(1))
+                                  }}
+                            sequence:
+                              - if:
+                                  - condition: template
+                                    value_template: "{{ monitor_alert_sound_enabled_value and monitor_alert_sound_value is mapping and monitor_alert_sound_value.media_content_id is defined and (monitor_players_value | count > 0) }}"
+                                then:
+                                  - continue_on_error: true
+                                    action: media_player.volume_set
+                                    target:
+                                      entity_id: "{{ monitor_players_value }}"
+                                    data:
+                                      volume_level: "{{ monitor_sound_volume_value }}"
+                                  - continue_on_error: true
+                                    action: media_player.play_media
+                                    target:
+                                      entity_id: "{{ monitor_players_value }}"
+                                    data:
+                                      media_content_id: "{{ monitor_alert_sound_value.media_content_id }}"
+                                      media_content_type: "{{ monitor_alert_sound_value.media_content_type }}"
+                              - wait_template: "{{ not is_state(monitor_entity_value, monitor_state_value) }}"
+                                timeout:
+                                  seconds: >-
+                                    {{
+                                      [
+                                        monitor_repeat_interval_seconds | int(1),
+                                        (monitor_alert_duration_seconds | int(1))
+                                        - (as_timestamp(now()) - (monitor_alert_started_ts | float(0))) | int(0)
+                                      ] | min
+                                    }}
+                                continue_on_timeout: true
+                        - repeat:
+                            for_each: "{{ monitor_original_volumes }}"
+                            sequence:
+                              - continue_on_error: true
+                                action: media_player.volume_set
+                                target:
+                                  entity_id: "{{ repeat.item.entity_id }}"
+                                data:
+                                  volume_level: "{{ repeat.item.volume }}"
+                        - choose:
+                            - conditions:
+                                - condition: template
+                                  value_template: "{{ is_state(monitor_entity_value, monitor_state_value) }}"
+                              sequence:
+                                - if:
+                                    - condition: template
+                                      value_template: "{{ monitor_aas_timeout_value != 'none' }}"
+                                  then:
+                                    - continue_on_error: true
+                                      action: mqtt.publish
+                                      data:
+                                        topic: aas/udalost
+                                        payload: "{{ monitor_aas_timeout_value }}"
+                                        qos: 1
+                                        retain: false
+                                - sequence: !input alert_timeout_actions
+                            - conditions:
+                                - condition: template
+                                  value_template: "{{ not is_state(monitor_entity_value, monitor_state_value) }}"
+                              sequence:
+                                - if:
+                                    - condition: template
+                                      value_template: "{{ monitor_aas_cleared_value != 'none' }}"
+                                  then:
+                                    - continue_on_error: true
+                                      action: mqtt.publish
+                                      data:
+                                        topic: aas/udalost
+                                        payload: "{{ monitor_aas_cleared_value }}"
+                                        qos: 1
+                                        retain: false
+                                - sequence: !input state_cleared_actions
+                - conditions:
                     - condition: template
                       value_template: >-
                         {{
-                          sound_allowed
-                          and alert_sound_enabled_value
-                          and alert_sound_value is mapping
-                          and alert_sound_value.media_content_id is defined
+                          trigger.id == 'entity_state_changed'
+                          and trigger.event.data.entity_id == monitor_entity_value
+                          and trigger.event.data.old_state is not none
+                          and trigger.event.data.new_state is not none
+                          and trigger.event.data.old_state.state == monitor_state_value
+                          and trigger.event.data.new_state.state != monitor_state_value
                         }}
-                  then:
-                    - action: media_player.volume_set
-                      target:
-                        entity_id: !input media_players
-                      data:
-                        volume_level: "{{ current_alert_volume | float(0.85) }}"
-                    - action: media_player.play_media
-                      target:
-                        entity_id: !input media_players
-                      data:
-                        media_content_id: "{{ alert_sound_value.media_content_id }}"
-                        media_content_type: "{{ alert_sound_value.media_content_type }}"
+                  sequence:
+                    - if:
+                        - condition: template
+                          value_template: "{{ monitor_recovery_sound_value is mapping and monitor_recovery_sound_value.media_content_id is defined and (monitor_players_value | count > 0) }}"
+                      then:
+                        - continue_on_error: true
+                          action: media_player.play_media
+                          target:
+                            entity_id: "{{ monitor_players_value }}"
+                          data:
+                            media_content_id: "{{ monitor_recovery_sound_value.media_content_id }}"
+                            media_content_type: "{{ monitor_recovery_sound_value.media_content_type }}"
 
-                - sequence: !input alert_repeat_actions
-
-                - wait_template: "{{ is_state(contact_sensor_entity, closed_state_value) }}"
-                  timeout: !input repeat_interval
-                  continue_on_timeout: true
-
-          - repeat:
-              for_each: "{{ original_volumes }}"
-              sequence:
-                - action: media_player.volume_set
-                  target:
-                    entity_id: "{{ repeat.item.entity_id }}"
-                  data:
-                    volume_level: "{{ repeat.item.volume }}"
-
-          - if:
-              - condition: template
-                value_template: "{{ is_state(contact_sensor_entity, closed_state_value) }}"
-            then:
-              - if:
-                  - condition: template
-                    value_template: "{{ mobile_allowed and mobile_closed_after_alert_actions_enabled_value }}"
-                then: !input mobile_closed_after_alert_actions
-
-              - sequence: !input closed_after_alert_actions
+mode: parallel
+max: 100
+max_exceeded: silent
