@@ -3,7 +3,7 @@
 Home Assistant blueprinty v tomto priečinku:
 
 - `bazen_filtracia_dynamicka.yaml` — **v1.0.0**
-- `dvere_okna_kontakt_alert.yaml` — **v2.0.1**
+- `dvere_okna_kontakt_alert.yaml` — **v2.1.0**
 - `casove_signaly_multi_event.yaml` — **v1.0.0**
 - `setric_svetla.yaml` — **v1.2.0**
 
@@ -35,12 +35,14 @@ Podporuje režimy:
 - `Standard`,
 - `Intenzívny`.
 
-## Univerzálny sledovač stavu — v2.0.1
+## Univerzálny sledovač stavu — v2.1.0
 
 `dvere_okna_kontakt_alert.yaml` je jeden blueprint pre ľubovoľný počet nezávislých sledovačov.
 
 Každý záznam má vlastné:
 
+- cieľový stav vyberateľný z bežných možností (`on`, `off`, `open`, `closed`, `true`, `false`, `unavailable`, `unknown`) alebo zadaný ako vlastná hodnota,
+- nezávislé prepínače zvuku pri vstupe, pri návrate a pri opakovanom upozorňovaní; zvuk sa dá vypnúť aj po jeho výbere,
 - entitu z domén `binary_sensor`, `switch`, `light` alebo `sensor`,
 - cieľový stav vrátane `unknown` alebo `unavailable`,
 - odklad pred začiatkom upozorňovania (0 = okamžite),
@@ -53,7 +55,7 @@ zmena sledovaného stavu a uplynutie celkového času. Akcie môžu používať
 `monitor_name_value` a `monitor_state_value`, aby správa pomenovala konkrétny
 záznam. Každý sledovač beží nezávisle; ukončenie jedného nemení ostatné.
 
-Blueprint počúva udalosti zmeny stavu HA a v akciách spracuje iba zvolené entity.
+Výber stavu používa spoločné návrhy a vlastnú hodnotu. Formulár Home Assistant blueprintu nepodporuje dynamické prepojenie stavu na entitu v opakovanom `object` riadku ani tlačidlo na prehratie náhľadu priamo pri zvuku. Blueprint počúva udalosti zmeny stavu HA a v akciách spracuje iba zvolené entity.
 Pre import použi stabilnú URL na `main` z metadát blueprintu.
 
 ## Časové znamenia (BETA)
