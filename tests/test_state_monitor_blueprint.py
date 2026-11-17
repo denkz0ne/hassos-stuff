@@ -58,7 +58,7 @@ class StateMonitorBlueprintTests(unittest.TestCase):
             item["domain"]
             for item in selector["fields"]["entity"]["selector"]["entity"]["filter"]
         }
-        self.assertEqual(domains, {"binary_sensor", "switch", "light", "sensor"})
+        self.assertEqual(domains, {"binary_sensor", "switch", "input_boolean", "light", "sensor"})
 
     def test_target_state_selector_suggests_common_states_and_allows_custom_values(self):
         monitors = self.blueprint["blueprint"]["input"]["monitors_section"]["input"]["monitors"]
