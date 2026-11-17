@@ -83,6 +83,17 @@ class StateMonitorBlueprintTests(unittest.TestCase):
         self.assertIn("get('entry_sound_enabled', true)", source)
         self.assertIn("get('recovery_sound_enabled', true)", source)
 
+    def test_transition_volume_is_optional_and_set_before_its_sound(self):
+        fields = self.blueprint["blueprint"]["input"]["monitors_section"]["input"]["monitors"]["selector"]["object"]["fields"]
+        for key in ("entry_sound_volume", "recovery_sound_volume"):
+            self.assertNotIn("default", fields[key])
+            self.assertEqual(fields[key]["selector"]["number"]["min"], 0)
+        source = BLUEPRINT_PATH.read_text(encoding="utf-8")
+        for kind in ("entry", "recovery"):
+            self.assertIn("get('" + kind + "_sound_volume', -1)", source)
+            self.assertIn("monitor_" + kind + "_volume_value | float(-1) >= 0", source)
+            self.assertIn("volume_level: \"{{ monitor_" + kind + "_volume_value }}\"", source)
+
     def test_only_a_real_state_change_from_an_enabled_watched_entity_passes(self):
         monitors = [
             {"enabled": True, "entity": "binary_sensor.dvere"},
