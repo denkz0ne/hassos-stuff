@@ -19,9 +19,12 @@ Home Assistant veci, helpery a blueprinty.
 
 Dynamická filtrácia bazéna v denných blokoch s režimami `Auto`, `Eco`, `Standard` a `Intenzívny`.
 
-### Dvere / okno alert
+### Univerzálny sledovač stavu — v2.0.0
 
-Kontaktný senzor, zvuky, timer, nočný režim a mobilné akcie.
+Jedna automatizácia sleduje viacero entít nezávisle: binary_sensor, switch, light a sensor.
+Každý záznam má cieľový stav, odklad pred alertom, vlastný zvuk, interval opakovania,
+celkový čas upozorňovania a voliteľné AAS eventy. Spoločné Action polia umožňujú
+Telegram notifikácie a vlastné akcie pri začiatku, zmene stavu alebo vypršaní času.
 
 ### Časové znamenia
 
