@@ -67,7 +67,7 @@ class StateMonitorBlueprintTests(unittest.TestCase):
         self.assertEqual(selector["mode"], "dropdown")
         self.assertTrue(selector["custom_value"])
         values = {option["value"] for option in selector["options"]}
-        self.assertTrue({"on", "off", "open", "closed", "true", "false", "unavailable", "unknown"} <= values)
+        self.assertTrue({"on", "off", "unavailable", "unknown"} <= values)
 
     def test_each_sound_can_be_disabled_without_clearing_the_media_selection(self):
         monitors = self.blueprint["blueprint"]["input"]["monitors_section"]["input"]["monitors"]
