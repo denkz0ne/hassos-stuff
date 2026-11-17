@@ -44,7 +44,6 @@ Každý záznam má vlastné:
 - cieľový stav vyberateľný ako zapnutý/aktívny (`on`), vypnutý/neaktívny (`off`), nedostupný alebo neznámy; pre neštandardné senzory možno zadať vlastnú hodnotu,
 - nezávislé prepínače zvuku pri vstupe, pri návrate a pri opakovanom upozorňovaní; zvuk sa dá vypnúť aj po jeho výbere,
 - entitu z domén `binary_sensor`, `switch`, `light` alebo `sensor`,
-- cieľový stav vrátane `unknown` alebo `unavailable`,
 - odklad pred začiatkom upozorňovania (0 = okamžite),
 - media playery a zvuky pri vstupe, počas upozorňovania a po zmene stavu,
 - interval opakovania zvuku a celkový čas upozorňovania,
