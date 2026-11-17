@@ -19,11 +19,11 @@ Home Assistant veci, helpery a blueprinty.
 
 Dynamická filtrácia bazéna v denných blokoch s režimami `Auto`, `Eco`, `Standard` a `Intenzívny`.
 
-### Univerzálny sledovač stavu — v2.0.1
+### Univerzálny sledovač stavu — v2.1.0
 
-Jedna automatizácia sleduje viacero entít nezávisle: binary_sensor, switch, light a sensor.
-Každý záznam má cieľový stav, odklad pred alertom, vlastný zvuk, interval opakovania,
-celkový čas upozorňovania a voliteľné AAS eventy. Spoločné Action polia umožňujú
+Jedna automatizácia sleduje viacero entít nezávisle: binary_sensor, switch, input_boolean, light a sensor.
+Každý záznam má cieľový stav on/off, nedostupný alebo neznámy a možnosť vlastnej hodnoty, odklad pred alertom,
+nezávislé prepínače zvukov, interval opakovania, celkový čas upozorňovania a voliteľné AAS eventy. Spoločné Action polia umožňujú
 Telegram notifikácie a vlastné akcie pri začiatku, zmene stavu alebo vypršaní času.
 
 ### Časové znamenia

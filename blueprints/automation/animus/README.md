@@ -3,7 +3,7 @@
 Home Assistant blueprinty v tomto priečinku:
 
 - `bazen_filtracia_dynamicka.yaml` — **v1.0.0**
-- `dvere_okna_kontakt_alert.yaml` — **v2.0.1**
+- `dvere_okna_kontakt_alert.yaml` — **v2.1.0**
 - `casove_signaly_multi_event.yaml` — **v1.0.0**
 - `setric_svetla.yaml` — **v1.2.0**
 
@@ -35,14 +35,15 @@ Podporuje režimy:
 - `Standard`,
 - `Intenzívny`.
 
-## Univerzálny sledovač stavu — v2.0.1
+## Univerzálny sledovač stavu — v2.1.0
 
 `dvere_okna_kontakt_alert.yaml` je jeden blueprint pre ľubovoľný počet nezávislých sledovačov.
 
 Každý záznam má vlastné:
 
-- entitu z domén `binary_sensor`, `switch`, `light` alebo `sensor`,
-- cieľový stav vrátane `unknown` alebo `unavailable`,
+- cieľový stav vyberateľný ako zapnutý/aktívny (`on`), vypnutý/neaktívny (`off`), nedostupný alebo neznámy; pre neštandardné senzory možno zadať vlastnú hodnotu,
+- nezávislé prepínače zvuku pri vstupe, pri návrate a pri opakovanom upozorňovaní; zvuk sa dá vypnúť aj po jeho výbere,
+- entitu z domén `binary_sensor`, `switch`, `input_boolean`, `light` alebo `sensor`,
 - odklad pred začiatkom upozorňovania (0 = okamžite),
 - media playery a zvuky pri vstupe, počas upozorňovania a po zmene stavu,
 - interval opakovania zvuku a celkový čas upozorňovania,
@@ -53,7 +54,7 @@ zmena sledovaného stavu a uplynutie celkového času. Akcie môžu používať
 `monitor_name_value` a `monitor_state_value`, aby správa pomenovala konkrétny
 záznam. Každý sledovač beží nezávisle; ukončenie jedného nemení ostatné.
 
-Blueprint počúva udalosti zmeny stavu HA a v akciách spracuje iba zvolené entity.
+Pri `binary_sensor`, `switch`, `input_boolean` a `light` Home Assistant používa interné stavy `on` a `off`; rozhranie môže ukazovať ich význam ako otvorené/zatvorené. Pre offline senzora sa používa `unavailable`, prípadne `unknown`. Opakovaný `object` editor blueprintu neprepája dynamicky stavové možnosti s entitou v tom istom riadku, preto sú bežné hodnoty uvedené priamo a vlastné hodnoty zostávajú dostupné. Blueprint počúva udalosti zmeny stavu HA a v akciách spracuje iba zvolené entity.
 Pre import použi stabilnú URL na `main` z metadát blueprintu.
 
 ## Časové znamenia (BETA)

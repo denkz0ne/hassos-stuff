@@ -58,7 +58,30 @@ class StateMonitorBlueprintTests(unittest.TestCase):
             item["domain"]
             for item in selector["fields"]["entity"]["selector"]["entity"]["filter"]
         }
-        self.assertEqual(domains, {"binary_sensor", "switch", "light", "sensor"})
+        self.assertEqual(domains, {"binary_sensor", "switch", "input_boolean", "light", "sensor"})
+
+    def test_target_state_selector_suggests_common_states_and_allows_custom_values(self):
+        monitors = self.blueprint["blueprint"]["input"]["monitors_section"]["input"]["monitors"]
+        selector = monitors["selector"]["object"]["fields"]["target_state"]["selector"]["select"]
+
+        self.assertEqual(selector["mode"], "dropdown")
+        self.assertTrue(selector["custom_value"])
+        values = {option["value"] for option in selector["options"]}
+        self.assertTrue({"on", "off", "unavailable", "unknown"} <= values)
+
+    def test_each_sound_can_be_disabled_without_clearing_the_media_selection(self):
+        monitors = self.blueprint["blueprint"]["input"]["monitors_section"]["input"]["monitors"]
+        fields = monitors["selector"]["object"]["fields"]
+        for key in ("entry_sound_enabled", "recovery_sound_enabled", "alert_sound_enabled"):
+            self.assertEqual(fields[key]["selector"], {"boolean": {}})
+
+        actions_yaml = yaml.safe_dump(self.blueprint["action"], allow_unicode=True)
+        for key in ("monitor_entry_sound_enabled_value", "monitor_recovery_sound_enabled_value", "monitor_alert_sound_enabled_value"):
+            self.assertIn(key, actions_yaml)
+
+        source = BLUEPRINT_PATH.read_text(encoding="utf-8")
+        self.assertIn("get('entry_sound_enabled', true)", source)
+        self.assertIn("get('recovery_sound_enabled', true)", source)
 
     def test_only_a_real_state_change_from_an_enabled_watched_entity_passes(self):
         monitors = [
