@@ -22,7 +22,7 @@ Dynamická filtrácia bazéna v denných blokoch s režimami `Auto`, `Eco`, `Sta
 ### Univerzálny sledovač stavu — v2.1.0
 
 Jedna automatizácia sleduje viacero entít nezávisle: binary_sensor, switch, light a sensor.
-Každý záznam má cieľový stav s bežnými návrhmi a možnosťou vlastnej hodnoty, odklad pred alertom,
+Každý záznam má cieľový stav on/off, nedostupný alebo neznámy a možnosť vlastnej hodnoty, odklad pred alertom,
 nezávislé prepínače zvukov, interval opakovania, celkový čas upozorňovania a voliteľné AAS eventy. Spoločné Action polia umožňujú
 Telegram notifikácie a vlastné akcie pri začiatku, zmene stavu alebo vypršaní času.
 
