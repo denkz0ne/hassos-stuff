@@ -3,7 +3,7 @@
 Home Assistant blueprinty v tomto priečinku:
 
 - `bazen_filtracia_dynamicka.yaml` — **v1.0.0**
-- `dvere_okna_kontakt_alert.yaml` — **v1.0.0**
+- `dvere_okna_kontakt_alert.yaml` — **v2.0.0**
 - `casove_signaly_multi_event.yaml` — **v1.0.0**
 - `setric_svetla.yaml` — **v1.2.0**
 
