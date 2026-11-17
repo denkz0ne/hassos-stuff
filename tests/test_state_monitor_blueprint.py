@@ -79,9 +79,9 @@ class StateMonitorBlueprintTests(unittest.TestCase):
         for key in ("monitor_entry_sound_enabled_value", "monitor_recovery_sound_enabled_value", "monitor_alert_sound_enabled_value"):
             self.assertIn(key, actions_yaml)
 
-        action_text = yaml.safe_dump(self.blueprint["action"], allow_unicode=True)
-        self.assertIn("get('entry_sound_enabled', true)", action_text)
-        self.assertIn("get('recovery_sound_enabled', true)", action_text)
+        source = BLUEPRINT_PATH.read_text(encoding="utf-8")
+        self.assertIn("get('entry_sound_enabled', true)", source)
+        self.assertIn("get('recovery_sound_enabled', true)", source)
 
     def test_only_a_real_state_change_from_an_enabled_watched_entity_passes(self):
         monitors = [
