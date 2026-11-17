@@ -41,7 +41,7 @@ Podporuje režimy:
 
 Každý záznam má vlastné:
 
-- cieľový stav vyberateľný z bežných možností (`on`, `off`, `open`, `closed`, `true`, `false`, `unavailable`, `unknown`) alebo zadaný ako vlastná hodnota,
+- cieľový stav vyberateľný ako zapnutý/aktívny (`on`), vypnutý/neaktívny (`off`), nedostupný alebo neznámy; pre neštandardné senzory možno zadať vlastnú hodnotu,
 - nezávislé prepínače zvuku pri vstupe, pri návrate a pri opakovanom upozorňovaní; zvuk sa dá vypnúť aj po jeho výbere,
 - entitu z domén `binary_sensor`, `switch`, `light` alebo `sensor`,
 - cieľový stav vrátane `unknown` alebo `unavailable`,
@@ -55,7 +55,7 @@ zmena sledovaného stavu a uplynutie celkového času. Akcie môžu používať
 `monitor_name_value` a `monitor_state_value`, aby správa pomenovala konkrétny
 záznam. Každý sledovač beží nezávisle; ukončenie jedného nemení ostatné.
 
-Výber stavu používa spoločné návrhy a vlastnú hodnotu. Formulár Home Assistant blueprintu nepodporuje dynamické prepojenie stavu na entitu v opakovanom `object` riadku ani tlačidlo na prehratie náhľadu priamo pri zvuku. Blueprint počúva udalosti zmeny stavu HA a v akciách spracuje iba zvolené entity.
+Pri `binary_sensor`, `switch` a `light` Home Assistant používa interné stavy `on` a `off`; rozhranie môže ukazovať ich význam ako otvorené/zatvorené. Pre offline senzora sa používa `unavailable`, prípadne `unknown`. Opakovaný `object` editor blueprintu neprepája dynamicky stavové možnosti s entitou v tom istom riadku, preto sú bežné hodnoty uvedené priamo a vlastné hodnoty zostávajú dostupné. Blueprint počúva udalosti zmeny stavu HA a v akciách spracuje iba zvolené entity.
 Pre import použi stabilnú URL na `main` z metadát blueprintu.
 
 ## Časové znamenia (BETA)
